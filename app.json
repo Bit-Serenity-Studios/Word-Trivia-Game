@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "The Athenaeum",
+    "slug": "the-athenaeum",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "athenaeum",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#171310",
+    "primaryColor": "#C9A227",
+    "splash": {
+      "backgroundColor": "#171310",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.athenaeum.app"
+    },
+    "android": {
+      "package": "com.athenaeum.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#171310"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#C9A227"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
