@@ -20,6 +20,8 @@ import {
 } from '@expo-google-fonts/eb-garamond';
 import { ThemeProvider } from '@/theme/ThemeProvider';
 import { palette } from '@/theme/tokens';
+import { RewardedAdHost } from '@/components/RewardedAdProvider';
+import { IapHost } from '@/components/IapHost';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -52,14 +54,18 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.ink }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: palette.ink },
-              animation: 'fade',
-            }}
-          />
+          <IapHost>
+            <RewardedAdHost>
+              <StatusBar style="light" />
+              <Stack
+                screenOptions={{
+                  headerShown: false,
+                  contentStyle: { backgroundColor: palette.ink },
+                  animation: 'fade',
+                }}
+              />
+            </RewardedAdHost>
+          </IapHost>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

@@ -1,6 +1,7 @@
 import type { RNG } from './types';
+import { economy } from './economy';
 
-export const FORAGE_DURATION_MS = 2 * 60 * 60 * 1000;
+export const FORAGE_DURATION_MS = economy.familiar.forageMs;
 
 export type HoardTier = 'common' | 'rich' | 'rare';
 
@@ -39,9 +40,10 @@ export function isReady(state: FamiliarState, now: number): boolean {
 
 export function rollReward(rng: RNG): HoardReward {
   const roll = rng();
-  if (roll < 0.05) return { tier: 'rare', ink: 100 };
-  if (roll < 0.3) return { tier: 'rich', ink: 50 };
-  return { tier: 'common', ink: 25 };
+  const { rare, rich, common } = economy.familiar.reward;
+  if (roll < rare.weight) return { tier: 'rare', ink: rare.ink };
+  if (roll < rare.weight + rich.weight) return { tier: 'rich', ink: rich.ink };
+  return { tier: 'common', ink: common.ink };
 }
 
 export function hoardFlavor(tier: HoardTier): string {

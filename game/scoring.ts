@@ -1,8 +1,10 @@
-export const BASE_INK = 8;
-export const STREAK_CAP = 5;
-export const STREAK_PER_LEVEL = 2;
-export const UNAIDED_BONUS = 5;
-export const HINT_COST = 15;
+import { economy } from './economy';
+
+export const BASE_INK = economy.ink.base;
+export const STREAK_CAP = economy.ink.streakCap;
+export const STREAK_PER_LEVEL = economy.ink.streakPerLevel;
+export const UNAIDED_BONUS = economy.ink.unaidedBonus;
+export const HINT_COST = economy.hint.cost;
 
 export interface Reward {
   base: number;

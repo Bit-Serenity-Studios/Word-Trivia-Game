@@ -1,9 +1,10 @@
 import type { Tier } from './types';
+import { economy } from './economy';
 
 export const DECOY_COUNT: Record<Tier, number> = {
-  novice: 4,
-  scholar: 5,
-  sage: 6,
+  novice: economy.difficulty.novice.decoys,
+  scholar: economy.difficulty.scholar.decoys,
+  sage: economy.difficulty.sage.decoys,
 };
 
 export function decoyCount(tier: Tier): number {
@@ -11,14 +12,14 @@ export function decoyCount(tier: Tier): number {
 }
 
 export function tierForLength(len: number): Tier {
-  if (len <= 5) return 'novice';
-  if (len <= 8) return 'scholar';
+  if (len <= economy.difficulty.novice.maxLen) return 'novice';
+  if (len <= economy.difficulty.scholar.maxLen) return 'scholar';
   return 'sage';
 }
 
 export function tierForEntries(entriesSolved: number): Tier {
-  if (entriesSolved < 5) return 'novice';
-  if (entriesSolved < 15) return 'scholar';
+  if (entriesSolved < economy.difficulty.promotion.scholarAt) return 'novice';
+  if (entriesSolved < economy.difficulty.promotion.sageAt) return 'scholar';
   return 'sage';
 }
 

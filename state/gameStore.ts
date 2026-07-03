@@ -16,6 +16,8 @@ import { useLedger } from './ledgerStore';
 
 export type Phase = 'playing' | 'resolving-correct' | 'resolving-wrong' | 'idle';
 
+export type HintFailure = 'no-target' | 'insufficient-ink';
+
 interface GameStore {
   round: RoundState | null;
   phase: Phase;
@@ -26,7 +28,9 @@ interface GameStore {
   place: (tileId: string) => void;
   returnFromSlot: (slotIndex: number) => void;
   submit: () => 'correct' | 'wrong' | 'incomplete';
-  revealHint: () => { ok: boolean; reason?: 'no-target' | 'insufficient-ink' };
+  revealHint: () => { ok: boolean; reason?: HintFailure };
+  revealHintFree: () => { ok: boolean; reason?: HintFailure };
+  awardBonusInk: (amount: number) => void;
   advance: () => void;
 }
 
@@ -40,6 +44,25 @@ function newRoundState(): RoundState {
     rng,
   });
   return buildRound(question, rng);
+}
+
+function resolveIfComplete(
+  set: (partial: Partial<GameStore>) => void,
+  get: () => GameStore,
+): void {
+  const after = get().round;
+  if (!after) return;
+  const check = checkAnswer(after);
+  if (check !== 'correct') return;
+  const ledger = useLedger.getState();
+  const reward = computeReward({
+    answerLength: after.question.answer.length,
+    streakBefore: ledger.streak,
+    hintsUsed: after.hintsUsed,
+  });
+  ledger.awardInk(reward.total);
+  ledger.recordEntry(after.question.id);
+  set({ phase: 'resolving-correct', lastReward: reward.total });
 }
 
 export const useGame = create<GameStore>((set, get) => ({
@@ -106,18 +129,23 @@ export const useGame = create<GameStore>((set, get) => ({
     if (result.revealedIndex === null) return { ok: false, reason: 'no-target' };
     ledger.spendInk(HINT_COST);
     set({ round: result.state });
-    const after = get().round;
-    if (after && checkAnswer(after) === 'correct') {
-      const reward = computeReward({
-        answerLength: after.question.answer.length,
-        streakBefore: ledger.streak,
-        hintsUsed: after.hintsUsed,
-      });
-      ledger.awardInk(reward.total);
-      ledger.recordEntry(after.question.id);
-      set({ phase: 'resolving-correct', lastReward: reward.total });
-    }
+    resolveIfComplete(set, get);
     return { ok: true };
+  },
+
+  revealHintFree: () => {
+    const round = get().round;
+    if (!round || get().phase !== 'playing') return { ok: false, reason: 'no-target' };
+    const result = revealLetter(round);
+    if (result.revealedIndex === null) return { ok: false, reason: 'no-target' };
+    set({ round: result.state });
+    resolveIfComplete(set, get);
+    return { ok: true };
+  },
+
+  awardBonusInk: (amount) => {
+    if (amount <= 0) return;
+    useLedger.getState().awardInk(amount);
   },
 
   advance: () => {
