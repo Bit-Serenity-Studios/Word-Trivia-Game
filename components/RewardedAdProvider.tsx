@@ -22,6 +22,7 @@ import {
   type RewardedAdResult,
   type RewardedPlacement,
 } from '@/services/ads';
+import { resolveAdsProvider } from '@/services/providerFactories';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useEntitlements } from '@/state/entitlementsStore';
 import { useTelemetry } from './TelemetryProvider';
@@ -88,7 +89,7 @@ export function RewardedAdHost({ children }: { children: React.ReactNode }) {
     [telemetry],
   );
 
-  const provider = useMemo<RewardedAdProvider>(
+  const stubProvider = useMemo<RewardedAdProvider>(
     () => ({
       isReady: () => true,
       showAd,
@@ -96,10 +97,17 @@ export function RewardedAdHost({ children }: { children: React.ReactNode }) {
     [showAd],
   );
 
+  const provider = useMemo<RewardedAdProvider>(
+    () => resolveAdsProvider(stubProvider),
+    [stubProvider],
+  );
+
+  const usingStub = provider === stubProvider;
+
   return (
     <Ctx.Provider value={provider}>
       {children}
-      {pending ? (
+      {usingStub && pending ? (
         <BroadcastModal
           placement={pending.placement}
           done={done}

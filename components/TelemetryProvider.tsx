@@ -1,11 +1,15 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import {
   NullTelemetry,
-  createConsoleTelemetry,
   type Telemetry,
   type TelemetryEventName,
   type TelemetryProps,
 } from '@/services/analytics';
+import {
+  defaultTelemetryForDev,
+  resolveTelemetry,
+} from '@/services/providerFactories';
+import { useTelemetryId } from '@/state/telemetryIdStore';
 
 const TelemetryCtx = createContext<Telemetry>(NullTelemetry);
 
@@ -29,10 +33,16 @@ interface Props {
 }
 
 export function TelemetryProvider({ children, telemetry }: Props) {
+  const hydrated = useTelemetryId((s) => s.hydrated);
+  const ensureId = useTelemetryId((s) => s.ensureId);
+
+  useEffect(() => {
+    if (hydrated) ensureId();
+  }, [hydrated, ensureId]);
+
   const impl = useMemo<Telemetry>(() => {
     if (telemetry) return telemetry;
-    if (__DEV__) return createConsoleTelemetry();
-    return NullTelemetry;
+    return resolveTelemetry(defaultTelemetryForDev());
   }, [telemetry]);
 
   useEffect(() => {

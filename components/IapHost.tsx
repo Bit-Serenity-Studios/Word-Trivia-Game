@@ -10,6 +10,7 @@ import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTheme } from '@/theme/ThemeProvider';
 import { economy } from '@/game/economy';
 import type { IapProvider, PurchaseAttempt } from '@/services/iap';
+import { resolveIapProvider } from '@/services/providerFactories';
 import { useEntitlements } from '@/state/entitlementsStore';
 import { useLedger } from '@/state/ledgerStore';
 import { useTelemetry } from './TelemetryProvider';
@@ -111,15 +112,22 @@ export function IapHost({ children }: { children: React.ReactNode }) {
     [entitlements.patron],
   );
 
-  const provider = useMemo<IapProvider>(
+  const stubProvider = useMemo<IapProvider>(
     () => ({ purchase, restore, isPurchased }),
     [purchase, restore, isPurchased],
   );
 
+  const provider = useMemo<IapProvider>(
+    () => resolveIapProvider(stubProvider),
+    [stubProvider],
+  );
+
+  const usingStub = provider === stubProvider;
+
   return (
     <Ctx.Provider value={provider}>
       {children}
-      {pending ? (
+      {usingStub && pending ? (
         <PurchaseModal
           title={pending.title}
           flavor={pending.flavor}
