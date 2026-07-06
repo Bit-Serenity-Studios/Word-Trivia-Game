@@ -34,7 +34,12 @@ export function CandleGlow() {
   const animated = useAnimatedStyle(() => ({ opacity: flicker.value }));
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, animated, { zIndex: t.z.candle }]} pointerEvents="none">
+    <Animated.View
+      style={[StyleSheet.absoluteFill, animated, { zIndex: t.z.candle }]}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <Svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
         <Defs>
           <RadialGradient id="glow" cx="50%" cy="38%" r="55%">

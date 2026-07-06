@@ -24,6 +24,7 @@ import { unlockedCount } from '@/game/cabinet';
 import { dateKey } from '@/game/daily';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useAnnouncements, ANNOUNCEMENTS } from '@/hooks/useAnnouncements';
 import { useTelemetry } from '@/components/TelemetryProvider';
 
 export default function VolumePlayScreen() {
@@ -65,6 +66,7 @@ export default function VolumePlayScreen() {
 
   const bestNightly = useDaily((s) => s.bestStreak);
   const telemetry = useTelemetry();
+  const { announce } = useAnnouncements();
 
   const applyRankProgress = useVolumes((s) => s.applyRankProgress);
   const celebrateRankId = useVolumes((s) => s.celebrateRankId);
@@ -91,8 +93,19 @@ export default function VolumePlayScreen() {
     if (roundId !== roundKeyRef.current) {
       roundKeyRef.current = roundId;
       setRescueDismissed(null);
+      if (isRare) announce(ANNOUNCEMENTS.sealedSpawn());
     }
-  }, [roundId]);
+  }, [roundId, isRare, announce]);
+
+  const rescueAnnouncedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!round) return;
+    const wrongAttempts = round.wrongAttempts;
+    if (wrongAttempts < economy.hint.freeAfterFailures) return;
+    if (!roundId || rescueAnnouncedRef.current === roundId) return;
+    rescueAnnouncedRef.current = roundId;
+    announce(ANNOUNCEMENTS.rescueOffered(economy.hint.cost));
+  }, [round, roundId, announce]);
 
   useEffect(() => {
     if (!hydrated || !volumesHydrated || !volume) return;
@@ -128,6 +141,7 @@ export default function VolumePlayScreen() {
       hintsUsed: roundHintsUsed,
       ink: lastReward ?? 0,
     });
+    announce(ANNOUNCEMENTS.entrySolved(lastReward ?? 0));
     if (roundIsRare) {
       telemetry.track('sealed_solved', {
         questionId: resolvedRoundKey,
@@ -145,6 +159,7 @@ export default function VolumePlayScreen() {
         order: gained.order,
         patron,
       });
+      announce(ANNOUNCEMENTS.rankUp(gained.title, gained.inkReward));
     }
     if (!hasBeenCompleted(volume.id)) {
       const prevSeen = seenIds.filter((id) => id !== resolvedRoundKey);
@@ -162,6 +177,7 @@ export default function VolumePlayScreen() {
           ink: ceremonyInk,
           patron,
         });
+        announce(ANNOUNCEMENTS.volumeCompleted(volume.title));
       }
     }
   }, [
@@ -184,6 +200,7 @@ export default function VolumePlayScreen() {
     hasBeenCompleted,
     markCompleted,
     showCompletionCeremony,
+    announce,
   ]);
 
   const wrongAttempts = round?.wrongAttempts ?? 0;

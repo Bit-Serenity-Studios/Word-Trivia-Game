@@ -139,6 +139,8 @@ export function PlaySurface(props: PlaySurfaceProps) {
                 haptics.soft();
                 props.onResolveAction?.();
               }}
+              accessibilityRole="button"
+              accessibilityLabel={props.resolveActionLabel}
               style={{
                 borderColor: t.palette.gold,
                 borderWidth: 1,
@@ -183,6 +185,9 @@ function ActionButton({
     <Pressable
       onPress={onPress}
       disabled={!enabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !enabled }}
       style={{
         flex: 1,
         paddingVertical: 12,

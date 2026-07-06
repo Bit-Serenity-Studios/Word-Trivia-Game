@@ -31,7 +31,8 @@ export function LetterTile({ letter, onPress, locked, invisible, size }: Props) 
         onPress?.();
       }}
       disabled={locked}
-      accessibilityLabel={`Letter tile ${letter}`}
+      accessibilityLabel={`Letter ${letter}`}
+      accessibilityHint={locked ? 'Already placed' : 'Places this letter in the next open slot'}
       style={{
         width: tileSize,
         height: tileSize,

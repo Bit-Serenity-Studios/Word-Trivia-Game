@@ -80,6 +80,8 @@ export function DustMotes({ count = 14 }: { count?: number }) {
     <Animated.View
       style={[StyleSheet.absoluteFill, { zIndex: t.z.motes }]}
       pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
     >
       {motes.map((c, i) => (
         <Mote key={i} config={c} />

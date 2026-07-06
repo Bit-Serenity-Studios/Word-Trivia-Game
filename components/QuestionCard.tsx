@@ -12,6 +12,9 @@ export function QuestionCard({ question }: Props) {
   const t = useTheme();
   return (
     <View
+      accessible
+      accessibilityRole="header"
+      accessibilityLabel={`${question.category}. ${question.prompt}`}
       style={[
         styles.wrap,
         t.shadow.card,

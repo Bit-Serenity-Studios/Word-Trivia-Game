@@ -11,7 +11,11 @@ interface Props {
 export function Ledger({ ink, streak, entries }: Props) {
   const t = useTheme();
   return (
-    <View style={styles.row}>
+    <View
+      style={styles.row}
+      accessible
+      accessibilityLabel={`Ledger: ${ink} ink, streak ${streak}, ${entries} entries catalogued.`}
+    >
       <Cell label="INK" value={String(ink)} accent={t.palette.gold} />
       <Divider />
       <Cell label="STREAK" value={String(streak)} accent={t.palette.parchment} />
@@ -24,7 +28,7 @@ export function Ledger({ ink, streak, entries }: Props) {
 function Cell({ label, value, accent }: { label: string; value: string; accent: string }) {
   const t = useTheme();
   return (
-    <View style={styles.cell}>
+    <View style={styles.cell} importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
       <Text
         style={{
           color: accent,
@@ -53,7 +57,13 @@ function Cell({ label, value, accent }: { label: string; value: string; accent: 
 
 function Divider() {
   const t = useTheme();
-  return <View style={[styles.divider, { backgroundColor: t.palette.sepia }]} />;
+  return (
+    <View
+      style={[styles.divider, { backgroundColor: t.palette.sepia }]}
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    />
+  );
 }
 
 const styles = StyleSheet.create({

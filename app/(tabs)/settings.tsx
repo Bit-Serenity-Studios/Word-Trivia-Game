@@ -74,14 +74,31 @@ export default function SettingsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.ink }}>
       <SafeAreaView style={{ flex: 1, padding: t.space.xl }}>
-        <Text style={[styles.title, { color: t.palette.parchment, fontFamily: t.fonts.display }]}>
+        <Text
+          style={[styles.title, { color: t.palette.parchment, fontFamily: t.fonts.display }]}
+          accessibilityRole="header"
+        >
           Settings
         </Text>
+
+        <SectionLabel>ACCESSIBILITY</SectionLabel>
+        <Row
+          label="High contrast"
+          value={settings.highContrast}
+          onToggle={() => settings.setHighContrast(!settings.highContrast)}
+        />
+        <Row
+          label="Larger text"
+          value={settings.textBoost}
+          onToggle={() => settings.setTextBoost(!settings.textBoost)}
+        />
         <Row
           label="Reduce motion"
           value={settings.reducedMotion}
           onToggle={() => settings.setReducedMotion(!settings.reducedMotion)}
         />
+
+        <SectionLabel>DESK</SectionLabel>
         <Row
           label="Haptics"
           value={settings.hapticsEnabled}
@@ -94,7 +111,13 @@ export default function SettingsScreen() {
         />
 
         <SectionLabel>PATRONAGE</SectionLabel>
-        <Pressable onPress={restore} style={[styles.pill, { borderColor: t.palette.gold }]}>
+        <Pressable
+          onPress={restore}
+          accessibilityRole="button"
+          accessibilityLabel="Restore purchases"
+          accessibilityHint="Re-applies any prior purchases from this account"
+          style={[styles.pill, { borderColor: t.palette.gold }]}
+        >
           <Text
             style={{
               color: t.palette.gold,
@@ -131,7 +154,13 @@ export default function SettingsScreen() {
         ) : null}
 
         <SectionLabel>WORD OF MOUTH</SectionLabel>
-        <Pressable onPress={share} style={[styles.pill, { borderColor: t.palette.sepia }]}>
+        <Pressable
+          onPress={share}
+          accessibilityRole="button"
+          accessibilityLabel="Share the Athenaeum"
+          accessibilityHint="Opens the system share sheet"
+          style={[styles.pill, { borderColor: t.palette.sepia }]}
+        >
           <Text
             style={{
               color: t.palette.parchment,
@@ -155,7 +184,13 @@ export default function SettingsScreen() {
         </Text>
 
         <View style={{ height: 32 }} />
-        <Pressable onPress={reset} style={[styles.destructive, { borderColor: t.palette.burgundy }]}>
+        <Pressable
+          onPress={reset}
+          accessibilityRole="button"
+          accessibilityLabel="Reset progress"
+          accessibilityHint="Erases every entry, unlock, and purchase on this device"
+          style={[styles.destructive, { borderColor: t.palette.burgundy }]}
+        >
           <Text
             style={{
               color: t.palette.burgundy,
@@ -176,6 +211,9 @@ function Row({ label, value, onToggle }: { label: string; value: boolean; onTogg
   return (
     <Pressable
       onPress={onToggle}
+      accessibilityRole="switch"
+      accessibilityLabel={label}
+      accessibilityState={{ checked: value }}
       style={{
         paddingVertical: 14,
         flexDirection: 'row',

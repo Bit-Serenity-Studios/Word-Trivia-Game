@@ -25,6 +25,7 @@ import {
 import { resolveAdsProvider } from '@/services/providerFactories';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useEntitlements } from '@/state/entitlementsStore';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTelemetry } from './TelemetryProvider';
 
 interface Pending {
@@ -130,11 +131,13 @@ function BroadcastModal({
   const t = useTheme();
   const copy = placementCopy(placement);
   const spin = useSharedValue(0);
+  const reduced = useReducedMotion();
   const [remaining, setRemaining] = useState(BROADCAST_DURATION_MS);
 
   useEffect(() => {
+    if (reduced) return;
     spin.value = withRepeat(withTiming(1, { duration: 1400, easing: Easing.linear }), -1);
-  }, [spin]);
+  }, [spin, reduced]);
 
   useEffect(() => {
     const start = Date.now();

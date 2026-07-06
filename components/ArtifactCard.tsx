@@ -14,6 +14,12 @@ export function ArtifactCard({ artifact, unlocked }: Props) {
   const color = unlocked ? t.palette.gold : t.palette.parchment;
   return (
     <View
+      accessible
+      accessibilityLabel={
+        unlocked
+          ? `${artifact.name}, catalogued. ${artifact.flavor}`
+          : `Sealed artifact. Unlocked after ${artifact.entriesRequired} entries.`
+      }
       style={[
         styles.wrap,
         {
@@ -25,7 +31,11 @@ export function ArtifactCard({ artifact, unlocked }: Props) {
         },
       ]}
     >
-      <View style={styles.icon}>
+      <View
+        style={styles.icon}
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+      >
         <ArtifactSVG kind={artifact.kind} color={color} size={56} faint={!unlocked} />
       </View>
       <Text

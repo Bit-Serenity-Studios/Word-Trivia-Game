@@ -7,33 +7,45 @@ import { FamiliarPanel } from '@/components/FamiliarPanel';
 import { EmptyState } from '@/components/EmptyState';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLedger } from '@/state/ledgerStore';
-import { ARTIFACTS, isUnlocked, nextArtifact, unlockedCount } from '@/game/cabinet';
+import { ARTIFACTS, isUnlocked, nextArtifact, unlockedCount, newlyUnlocked } from '@/game/cabinet';
 import { useTelemetry } from '@/components/TelemetryProvider';
+import { useAnnouncements, ANNOUNCEMENTS } from '@/hooks/useAnnouncements';
 
 export default function CabinetScreen() {
   const t = useTheme();
   const entries = useLedger((s) => s.entries);
   const telemetry = useTelemetry();
+  const { announce } = useAnnouncements();
   const total = ARTIFACTS.length;
   const unlocked = unlockedCount(entries);
   const owl = ARTIFACTS.find((a) => a.kind === 'spectral-owl')!;
   const owlUnlocked = isUnlocked(entries, owl);
   const upcoming = nextArtifact(entries);
 
-  const lastUnlockedRef = useRef<number>(unlocked);
+  const lastEntriesRef = useRef<number>(entries);
   useEffect(() => {
-    if (unlocked > lastUnlockedRef.current) {
-      telemetry.track('cabinet_unlocked', { total: unlocked });
-      lastUnlockedRef.current = unlocked;
+    const prev = lastEntriesRef.current;
+    if (entries > prev) {
+      const newArtifacts = newlyUnlocked(prev, entries);
+      if (newArtifacts.length > 0) {
+        telemetry.track('cabinet_unlocked', { total: unlocked });
+        for (const artifact of newArtifacts) {
+          announce(ANNOUNCEMENTS.cabinetUnlocked(artifact.name));
+        }
+      }
+      lastEntriesRef.current = entries;
     }
-  }, [unlocked, telemetry]);
+  }, [entries, unlocked, telemetry, announce]);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.ink }}>
       <CandleGlow />
       <SafeAreaView style={{ flex: 1, zIndex: 10 }} edges={['top']}>
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={[styles.title, { color: t.palette.parchment, fontFamily: t.fonts.display }]}>
+          <Text
+            accessibilityRole="header"
+            style={[styles.title, { color: t.palette.parchment, fontFamily: t.fonts.display }]}
+          >
             Cabinet of Curiosities
           </Text>
           <Text

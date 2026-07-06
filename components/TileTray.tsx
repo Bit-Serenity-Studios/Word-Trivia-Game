@@ -40,7 +40,10 @@ export function TileTray({ round, onTilePress }: Props) {
         ]}
         pointerEvents="none"
       />
-      <View style={styles.row}>
+      <View
+        style={styles.row}
+        accessibilityLabel={`Tray. ${round.tray.length} tile${round.tray.length === 1 ? '' : 's'} available.`}
+      >
         {round.tray.map((tile) => (
           <View key={tile.id} style={{ margin: t.size.tileGap / 2 }}>
             <LetterTile letter={tile.letter} onPress={() => onTilePress(tile.id)} />

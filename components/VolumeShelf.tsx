@@ -48,10 +48,18 @@ function VolumeCard({
   const { volume, solved, size, unlocked, completed, unlockThreshold } = progress;
   const bar = size === 0 ? 0 : solved / size;
 
+  const a11yLabel = unlocked
+    ? `${volume.title}. Volume ${volume.order + 1}. ${solved} of ${size} entries catalogued.${completed ? ' Volume complete.' : ''}`
+    : `${volume.title}. Sealed. Complete ${progress.unlockThreshold} entries in the previous volume to open.`;
+
   return (
     <Pressable
       onPress={() => (unlocked ? onOpen(volume.id) : undefined)}
       disabled={!unlocked}
+      accessibilityRole="button"
+      accessibilityLabel={a11yLabel}
+      accessibilityHint={unlocked ? 'Opens this volume' : undefined}
+      accessibilityState={{ disabled: !unlocked }}
       style={({ pressed }) => [
         styles.card,
         {
@@ -71,6 +79,8 @@ function VolumeCard({
               borderColor: t.palette.sepia,
             },
           ]}
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
         >
           <VolumeCover
             cover={volume.cover}

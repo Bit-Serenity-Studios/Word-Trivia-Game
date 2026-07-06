@@ -44,7 +44,12 @@ export function WaxSeal({ visible, label = 'CATALOGUED' }: Props) {
   if (!visible) return null;
 
   return (
-    <Animated.View style={[styles.wrap, { zIndex: t.z.seal }, anim]} pointerEvents="none">
+    <Animated.View
+      style={[styles.wrap, { zIndex: t.z.seal }, anim]}
+      pointerEvents="none"
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+    >
       <View
         style={[
           styles.disc,

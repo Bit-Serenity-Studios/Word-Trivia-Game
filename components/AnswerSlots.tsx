@@ -70,7 +70,14 @@ export function AnswerSlots({ round, shakeKey, onReturn }: Props) {
                 marginHorizontal: t.size.slotGap / 2,
               },
             ]}
-            accessibilityLabel={filled ? `Slot ${slot.index + 1}: ${tile.letter}` : `Empty slot ${slot.index + 1}`}
+            accessibilityRole="button"
+            accessibilityLabel={
+              filled
+                ? `Slot ${slot.index + 1} of ${round.slots.length}, letter ${tile.letter}`
+                : `Slot ${slot.index + 1} of ${round.slots.length}, empty`
+            }
+            accessibilityHint={filled && !slot.locked ? 'Returns this letter to the tray' : undefined}
+            accessibilityState={{ disabled: slot.locked || !filled, selected: slot.locked }}
           >
             <View style={[styles.slotUnderline, { backgroundColor: color, opacity: filled ? 0 : 0.7 }]} />
             {filled ? (

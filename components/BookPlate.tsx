@@ -14,7 +14,12 @@ export function BookPlate({ rank, compact }: Props) {
   const width = compact ? 200 : 260;
   const height = compact ? 68 : 84;
   return (
-    <View style={{ alignItems: 'center' }}>
+    <View
+      style={{ alignItems: 'center' }}
+      accessible
+      accessibilityRole="header"
+      accessibilityLabel={`Reader's bookplate. Rank: ${rank.title}. ${rank.epithet}.`}
+    >
       <View style={{ width, height, justifyContent: 'center', alignItems: 'center' }}>
         <Svg
           width={width}

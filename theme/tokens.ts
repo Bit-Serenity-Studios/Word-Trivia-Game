@@ -129,11 +129,22 @@ export const z = {
   seal: 60,
 } as const;
 
+export type PaletteMap = Record<PaletteColor, string>;
+
+export interface TypeToken {
+  family: string;
+  size: number;
+  lineHeight: number;
+  letterSpacing?: number;
+}
+
+export type TypeMap = Record<keyof typeof type, TypeToken>;
+
 export type Tokens = {
-  palette: typeof palette;
+  palette: PaletteMap;
   fonts: typeof fonts;
   fontFallback: typeof fontFallback;
-  type: typeof type;
+  type: TypeMap;
   space: typeof space;
   radii: typeof radii;
   size: typeof size;

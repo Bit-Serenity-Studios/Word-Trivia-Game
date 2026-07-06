@@ -5,6 +5,7 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 interface Props {
   onPress?: () => void;
   disabled?: boolean;
@@ -13,6 +14,8 @@ interface Props {
   pressDepth?: number;
   hitSlop?: number;
   accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityState?: { disabled?: boolean; selected?: boolean };
 }
 
 export function PressableTile({
@@ -23,18 +26,22 @@ export function PressableTile({
   pressDepth = 3,
   hitSlop = 6,
   accessibilityLabel,
+  accessibilityHint,
+  accessibilityState,
 }: Props) {
   const pressed = useSharedValue<number>(0);
+  const reduced = useReducedMotion();
+  const effectiveDepth = reduced ? 0 : pressDepth;
 
   const onPressIn = useCallback(() => {
-    pressed.value = withTiming(1, { duration: 70 });
-  }, [pressed]);
+    pressed.value = reduced ? 1 : withTiming(1, { duration: 70 });
+  }, [pressed, reduced]);
   const onPressOut = useCallback(() => {
-    pressed.value = withTiming(0, { duration: 120 });
-  }, [pressed]);
+    pressed.value = reduced ? 0 : withTiming(0, { duration: 120 });
+  }, [pressed, reduced]);
 
   const animated = useAnimatedStyle(() => ({
-    transform: [{ translateY: pressed.value * pressDepth }],
+    transform: [{ translateY: pressed.value * effectiveDepth }],
     shadowOpacity: 0.55 - pressed.value * 0.22,
     shadowRadius: 4 - pressed.value * 2,
     shadowOffset: { width: 0, height: 3 - pressed.value * 2 },
@@ -49,6 +56,8 @@ export function PressableTile({
       hitSlop={hitSlop}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: disabled ?? false, ...accessibilityState }}
     >
       <Animated.View
         style={[

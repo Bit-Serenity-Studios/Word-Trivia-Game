@@ -152,6 +152,7 @@ export default function OnboardingScreen() {
               {stepLabel}
             </Text>
             <Text
+              accessibilityRole="header"
               style={{
                 color: t.palette.parchment,
                 fontFamily: t.fonts.display,
@@ -177,6 +178,8 @@ export default function OnboardingScreen() {
             </Text>
             <Pressable
               onPress={() => setProgress(advanceSlide)}
+              accessibilityRole="button"
+              accessibilityLabel={isLast ? 'Begin a first entry' : 'Continue'}
               style={[styles.primary, { borderColor: t.palette.gold }]}
             >
               <Text

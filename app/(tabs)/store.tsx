@@ -216,6 +216,10 @@ function TileButton({
       <Pressable
         onPress={onPress}
         disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={`${title}. ${actionLabel}.`}
+        accessibilityHint={body}
+        accessibilityState={{ disabled: disabled ?? false }}
         style={{
           marginLeft: 12,
           paddingVertical: 8,
