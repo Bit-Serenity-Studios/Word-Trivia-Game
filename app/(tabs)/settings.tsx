@@ -4,11 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useSettings } from '@/state/settingsStore';
 import { useLedger } from '@/state/ledgerStore';
+import { useVolumes } from '@/state/volumeStore';
 
 export default function SettingsScreen() {
   const t = useTheme();
   const settings = useSettings();
-  const reset = useLedger((s) => s.reset);
+  const resetLedger = useLedger((s) => s.reset);
+  const resetVolumes = useVolumes((s) => s.reset);
+  const reset = () => {
+    resetLedger();
+    resetVolumes();
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.ink }}>

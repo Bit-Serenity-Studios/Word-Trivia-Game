@@ -12,19 +12,29 @@ import { revealLetter } from '@/game/hints';
 import { mulberry32, seedFromString } from '@/game/rng';
 import { bundledSource } from '@/content/source';
 import { computeReward, HINT_COST } from '@/game/scoring';
+import type { VolumeId } from '@/game/volumes';
+import { applyRareMultiplier } from '@/game/rareVolume';
+import { economy } from '@/game/economy';
 import { useLedger } from './ledgerStore';
 
 export type Phase = 'playing' | 'resolving-correct' | 'resolving-wrong' | 'idle';
-
+export type Mode = 'general' | 'volume';
 export type HintFailure = 'no-target' | 'insufficient-ink';
+
+interface StartOpts {
+  volumeId?: VolumeId;
+}
 
 interface GameStore {
   round: RoundState | null;
   phase: Phase;
+  mode: Mode;
+  activeVolume: VolumeId | null;
+  isRare: boolean;
   lastReward: number | null;
   wrongFlash: number;
 
-  startNext: () => void;
+  startNext: (opts?: StartOpts) => void;
   place: (tileId: string) => void;
   returnFromSlot: (slotIndex: number) => void;
   submit: () => 'correct' | 'wrong' | 'incomplete';
@@ -32,18 +42,45 @@ interface GameStore {
   revealHintFree: () => { ok: boolean; reason?: HintFailure };
   awardBonusInk: (amount: number) => void;
   advance: () => void;
+  clearRound: () => void;
 }
 
-function newRoundState(): RoundState {
+interface BuiltRound {
+  round: RoundState;
+  isRare: boolean;
+}
+
+function newRoundState(opts?: StartOpts): BuiltRound {
   const ledger = useLedger.getState();
   const seedSource = `${ledger.entries}:${ledger.seenIds.length}:${ledger.ink}`;
   const rng = mulberry32(seedFromString(seedSource) ^ ((Date.now() & 0xffffffff) >>> 0));
+
+  if (opts?.volumeId) {
+    const wantsRare =
+      mulberry32(seedFromString(`rare-roll:${opts.volumeId}:${ledger.entries}`))() <
+      economy.rareVolume.spawnRate;
+    if (wantsRare) {
+      const rare = bundledSource.pickRareInVolume({
+        volumeId: opts.volumeId,
+        seenIds: ledger.seenIds,
+        rng,
+      });
+      if (rare) return { round: buildRound(rare, rng), isRare: true };
+    }
+    const question = bundledSource.nextInVolume({
+      volumeId: opts.volumeId,
+      seenIds: ledger.seenIds,
+      rng,
+    });
+    return { round: buildRound(question, rng), isRare: false };
+  }
+
   const question = bundledSource.nextQuestion({
     entriesSolved: ledger.entries,
     seenIds: ledger.seenIds,
     rng,
   });
-  return buildRound(question, rng);
+  return { round: buildRound(question, rng), isRare: false };
 }
 
 function resolveIfComplete(
@@ -60,19 +97,35 @@ function resolveIfComplete(
     streakBefore: ledger.streak,
     hintsUsed: after.hintsUsed,
   });
-  ledger.awardInk(reward.total);
+  const paid = applyRareMultiplier(reward.total, get().isRare);
+  ledger.awardInk(paid);
   ledger.recordEntry(after.question.id);
-  set({ phase: 'resolving-correct', lastReward: reward.total });
+  set({ phase: 'resolving-correct', lastReward: paid });
 }
 
 export const useGame = create<GameStore>((set, get) => ({
   round: null,
   phase: 'idle',
+  mode: 'general',
+  activeVolume: null,
+  isRare: false,
   lastReward: null,
   wrongFlash: 0,
 
-  startNext: () => {
-    set({ round: newRoundState(), phase: 'playing', lastReward: null });
+  startNext: (opts) => {
+    const { round, isRare } = newRoundState(opts);
+    set({
+      round,
+      phase: 'playing',
+      lastReward: null,
+      isRare,
+      mode: opts?.volumeId ? 'volume' : 'general',
+      activeVolume: opts?.volumeId ?? null,
+    });
+  },
+
+  clearRound: () => {
+    set({ round: null, phase: 'idle', lastReward: null, isRare: false });
   },
 
   place: (tileId) => {
@@ -90,9 +143,10 @@ export const useGame = create<GameStore>((set, get) => ({
         streakBefore: ledger.streak,
         hintsUsed: after.hintsUsed,
       });
-      ledger.awardInk(reward.total);
+      const paid = applyRareMultiplier(reward.total, get().isRare);
+      ledger.awardInk(paid);
       ledger.recordEntry(after.question.id);
-      set({ phase: 'resolving-correct', lastReward: reward.total });
+      set({ phase: 'resolving-correct', lastReward: paid });
     } else {
       useLedger.getState().breakStreak();
       set({
@@ -149,6 +203,11 @@ export const useGame = create<GameStore>((set, get) => ({
   },
 
   advance: () => {
+    const activeVolume = get().activeVolume;
+    if (activeVolume) {
+      get().startNext({ volumeId: activeVolume });
+      return;
+    }
     get().startNext();
   },
 }));

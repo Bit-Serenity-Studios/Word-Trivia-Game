@@ -43,6 +43,13 @@ export const economy = {
     dailyGiftInk: 30,
     dailyGiftHints: 0,
   },
+  rareVolume: {
+    spawnRate: 0.12,
+    rewardMultiplier: 3,
+  },
+  ranks: {
+    patronBonus: 0.25,
+  },
   iap: {
     patron: {
       sku: 'com.athenaeum.patron',
