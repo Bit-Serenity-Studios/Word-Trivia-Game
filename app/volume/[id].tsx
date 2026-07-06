@@ -5,6 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { PlaySurface } from '@/components/PlaySurface';
 import { Ledger } from '@/components/Ledger';
 import { BookPlate } from '@/components/BookPlate';
+import { CuratorLetter } from '@/components/CuratorLetter';
+import { VolumeCompletion } from '@/components/VolumeCompletion';
 import { useGame } from '@/state/gameStore';
 import { useLedger } from '@/state/ledgerStore';
 import { useEntitlements } from '@/state/entitlementsStore';
@@ -14,9 +16,12 @@ import { useRewardedAds } from '@/components/RewardedAdProvider';
 import { HINT_COST } from '@/game/scoring';
 import { economy } from '@/game/economy';
 import { getVolume, volumeProgress, type VolumeId } from '@/game/volumes';
+import { volumeCompletionCheck } from '@/game/volumeCompletion';
+import { letterFor } from '@/game/curators';
 import { bundledSource } from '@/content/source';
 import { RANKS, type Rank } from '@/game/ranks';
 import { unlockedCount } from '@/game/cabinet';
+import { dateKey } from '@/game/daily';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useTelemetry } from '@/components/TelemetryProvider';
@@ -66,6 +71,16 @@ export default function VolumePlayScreen() {
   const clearRankCelebration = useVolumes((s) => s.clearRankCelebration);
   const volumesHydrated = useVolumes((s) => s.hydrated);
   const setActiveVolume = useVolumes((s) => s.setActive);
+  const hasBeenOpened = useVolumes((s) => s.hasBeenOpened);
+  const markOpened = useVolumes((s) => s.markOpened);
+  const hasBeenCompleted = useVolumes((s) => s.hasBeenCompleted);
+  const markCompleted = useVolumes((s) => s.markCompleted);
+  const showCompletionCeremony = useVolumes((s) => s.showCompletionCeremony);
+  const celebrateCompletionId = useVolumes((s) => s.celebrateCompletionId);
+  const clearCompletionCeremony = useVolumes((s) => s.clearCompletionCeremony);
+
+  const [letterVisible, setLetterVisible] = useState(false);
+  const letterDeferredRef = useRef(false);
 
   const roundId = round?.question.id ?? null;
   const [rescueDismissed, setRescueDismissed] = useState<string | null>(null);
@@ -80,17 +95,22 @@ export default function VolumePlayScreen() {
   }, [roundId]);
 
   useEffect(() => {
-    if (!hydrated || !volume) return;
+    if (!hydrated || !volumesHydrated || !volume) return;
     if (mode !== 'volume' || activeVolume !== volume.id || !round) {
       startNext({ volumeId: volume.id });
       telemetry.track('volume_opened', { volume: volume.id });
+      if (!hasBeenOpened(volume.id) && !letterDeferredRef.current) {
+        setLetterVisible(true);
+      }
     }
-  }, [hydrated, volume, mode, activeVolume, round, startNext, telemetry]);
+  }, [hydrated, volumesHydrated, volume, mode, activeVolume, round, startNext, telemetry, hasBeenOpened]);
 
   useEffect(() => {
     if (volume) setActiveVolume(volume.id);
     return () => setActiveVolume(null);
   }, [volume, setActiveVolume]);
+
+  const pool = useMemo(() => bundledSource.allQuestions(), []);
 
   const resolvedRoundKey = phase === 'resolving-correct' ? roundId : null;
   const roundIsRare = isRare;
@@ -126,6 +146,24 @@ export default function VolumePlayScreen() {
         patron,
       });
     }
+    if (!hasBeenCompleted(volume.id)) {
+      const prevSeen = seenIds.filter((id) => id !== resolvedRoundKey);
+      const outcome = volumeCompletionCheck(pool, volume.id, prevSeen, seenIds);
+      if (outcome === 'just-completed') {
+        const ceremonyInk = Math.round(
+          economy.volumeCompletion.baseInk * (patron ? 1 + economy.ranks.patronBonus : 1),
+        );
+        awardInk(ceremonyInk);
+        const stamp = dateKey(new Date());
+        markCompleted(volume.id, stamp);
+        showCompletionCeremony(volume.id);
+        telemetry.track('volume_completed', {
+          volume: volume.id,
+          ink: ceremonyInk,
+          patron,
+        });
+      }
+    }
   }, [
     resolvedRoundKey,
     roundIsRare,
@@ -141,6 +179,11 @@ export default function VolumePlayScreen() {
     telemetry,
     hydrated,
     volumesHydrated,
+    seenIds,
+    pool,
+    hasBeenCompleted,
+    markCompleted,
+    showCompletionCeremony,
   ]);
 
   const wrongAttempts = round?.wrongAttempts ?? 0;
@@ -196,7 +239,6 @@ export default function VolumePlayScreen() {
     router.back();
   }, [clearRound, router]);
 
-  const pool = useMemo(() => bundledSource.allQuestions(), []);
   const progress = useMemo(() => {
     if (!volume) return null;
     return volumeProgress(pool, seenIds).find((p) => p.volume.id === volume.id) ?? null;
@@ -205,6 +247,27 @@ export default function VolumePlayScreen() {
   const celebratedRank: Rank | null = celebrateRankId
     ? RANKS.find((r) => r.id === celebrateRankId) ?? null
     : null;
+
+  const onLetterDismiss = useCallback(
+    (choice: 'begin' | 'later') => {
+      if (!volume) return;
+      setLetterVisible(false);
+      if (choice === 'begin') {
+        const stamp = dateKey(new Date());
+        markOpened(volume.id, stamp);
+        telemetry.track('curator_letter_viewed', { volume: volume.id });
+      } else {
+        letterDeferredRef.current = true;
+        telemetry.track('curator_letter_dismissed', { volume: volume.id });
+      }
+    },
+    [volume, markOpened, telemetry],
+  );
+
+  const onCompletionDismiss = useCallback(() => {
+    clearCompletionCeremony();
+    router.back();
+  }, [clearCompletionCeremony, router]);
 
   if (!volume) {
     return (
@@ -405,6 +468,22 @@ export default function VolumePlayScreen() {
         />
       ) : null}
 
+      <CuratorLetter
+        visible={letterVisible}
+        volume={volume}
+        letter={letterFor(volume.id)}
+        onDismiss={onLetterDismiss}
+      />
+
+      <VolumeCompletion
+        visible={celebrateCompletionId === volume.id}
+        volume={volume}
+        letter={letterFor(volume.id)}
+        inkReward={Math.round(
+          economy.volumeCompletion.baseInk * (patron ? 1 + economy.ranks.patronBonus : 1),
+        )}
+        onDismiss={onCompletionDismiss}
+      />
     </View>
   );
 }

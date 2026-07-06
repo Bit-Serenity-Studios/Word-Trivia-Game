@@ -1,29 +1,47 @@
 import React from 'react';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 import { VolumeCover } from './VolumeCover';
+import { TierRibbon } from './TierRibbon';
 import type { VolumeProgress } from '@/game/volumes';
+import { volumeCountsByTier } from '@/game/volumeCompletion';
+import { bundledSource } from '@/content/source';
 import { useTheme } from '@/theme/ThemeProvider';
 
 interface Props {
   progress: readonly VolumeProgress[];
+  seenIds: readonly string[];
   onOpen: (volumeId: VolumeProgress['volume']['id']) => void;
 }
 
-export function VolumeShelf({ progress, onOpen }: Props) {
+export function VolumeShelf({ progress, seenIds, onOpen }: Props) {
+  const pool = bundledSource.allQuestions();
   return (
     <View style={{ paddingHorizontal: 16 }}>
       {progress.map((p) => (
-        <VolumeCard key={p.volume.id} progress={p} onOpen={onOpen} />
+        <VolumeCard
+          key={p.volume.id}
+          progress={p}
+          tiers={volumeCountsByTier(pool, p.volume.id, seenIds)}
+          onOpen={onOpen}
+        />
       ))}
     </View>
   );
 }
 
+interface TierCounts {
+  novice: { solved: number; size: number };
+  scholar: { solved: number; size: number };
+  sage: { solved: number; size: number };
+}
+
 function VolumeCard({
   progress,
+  tiers,
   onOpen,
 }: {
   progress: VolumeProgress;
+  tiers: TierCounts;
   onOpen: Props['onOpen'];
 }) {
   const t = useTheme();
@@ -120,6 +138,12 @@ function VolumeCard({
             >
               {solved} / {size} entries {completed ? '· catalogued' : ''}
             </Text>
+            <TierRibbon
+              novice={tiers.novice}
+              scholar={tiers.scholar}
+              sage={tiers.sage}
+              faint={!unlocked}
+            />
           </View>
         </View>
       </View>

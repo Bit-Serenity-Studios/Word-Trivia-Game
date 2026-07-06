@@ -50,6 +50,9 @@ export const economy = {
   ranks: {
     patronBonus: 0.25,
   },
+  volumeCompletion: {
+    baseInk: 100,
+  },
   onboarding: {
     coachedQuestionId: 'bb-fern',
     notificationAskAfterEntries: 3,

@@ -117,7 +117,7 @@ export default function PlayShelf() {
           >
             THE READING LIST
           </Text>
-          <VolumeShelf progress={progress} onOpen={openVolume} />
+          <VolumeShelf progress={progress} seenIds={seenIds} onOpen={openVolume} />
         </ScrollView>
       </SafeAreaView>
     </View>

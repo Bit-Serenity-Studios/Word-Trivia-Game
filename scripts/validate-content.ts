@@ -79,13 +79,19 @@ function validate(): Issue[] {
   return issues;
 }
 
+const EXPECTED_PER_VOLUME = 30;
+
 function validateVolumes(pool: readonly Question[]): Issue[] {
   const issues: Issue[] = [];
   const perVolume = new Map<string, number>();
+  const perVolumeTier = new Map<string, { novice: number; scholar: number; sage: number }>();
   for (const q of pool) {
     try {
       const vid = volumeIdForQuestion(q);
       perVolume.set(vid, (perVolume.get(vid) ?? 0) + 1);
+      const tiers = perVolumeTier.get(vid) ?? { novice: 0, scholar: 0, sage: 0 };
+      tiers[q.tier] += 1;
+      perVolumeTier.set(vid, tiers);
     } catch (err) {
       issues.push({ id: q.id, message: `no volume for category "${q.category}": ${(err as Error).message}` });
     }
@@ -95,6 +101,19 @@ function validateVolumes(pool: readonly Question[]): Issue[] {
     const count = perVolume.get(v.id) ?? 0;
     if (count === 0) {
       issues.push({ id: v.id, message: `volume "${v.id}" has zero questions` });
+    }
+    if (count !== EXPECTED_PER_VOLUME) {
+      issues.push({
+        id: v.id,
+        message: `volume "${v.id}" has ${count} questions, expected ${EXPECTED_PER_VOLUME}`,
+      });
+    }
+    const tiers = perVolumeTier.get(v.id) ?? { novice: 0, scholar: 0, sage: 0 };
+    if (tiers.novice < 4) {
+      issues.push({ id: v.id, message: `volume "${v.id}" has only ${tiers.novice} novice entries (expected >= 4)` });
+    }
+    if (tiers.sage < 3) {
+      issues.push({ id: v.id, message: `volume "${v.id}" has only ${tiers.sage} sage entries (expected >= 3)` });
     }
     sum += count;
   }

@@ -4,11 +4,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { VolumeId } from '@/game/volumes';
 import { currentRank, type ProgressFacts, type Rank, RANKS, rankUpReward } from '@/game/ranks';
 
+type VolumeDateMap = Partial<Record<VolumeId, string>>;
+
 interface VolumeStoreState {
   activeVolume: VolumeId | null;
   highestRankOrder: number;
   rankInitialized: boolean;
   celebrateRankId: string | null;
+  firstOpenedAt: VolumeDateMap;
+  completedAt: VolumeDateMap;
+  celebrateCompletionId: VolumeId | null;
   hydrated: boolean;
   setActive: (id: VolumeId | null) => void;
   applyRankProgress: (
@@ -17,6 +22,12 @@ interface VolumeStoreState {
   ) => Rank | null;
   initializeRankFloor: (facts: ProgressFacts) => void;
   clearRankCelebration: () => void;
+  markOpened: (volumeId: VolumeId, isoDate: string) => boolean;
+  hasBeenOpened: (volumeId: VolumeId) => boolean;
+  markCompleted: (volumeId: VolumeId, isoDate: string) => boolean;
+  hasBeenCompleted: (volumeId: VolumeId) => boolean;
+  showCompletionCeremony: (volumeId: VolumeId) => void;
+  clearCompletionCeremony: () => void;
   markHydrated: () => void;
   reset: () => void;
 }
@@ -30,6 +41,9 @@ export const useVolumes = create<VolumeStoreState>()(
       highestRankOrder: 0,
       rankInitialized: false,
       celebrateRankId: null,
+      firstOpenedAt: {},
+      completedAt: {},
+      celebrateCompletionId: null,
       hydrated: false,
       setActive: (id) => set({ activeVolume: id }),
       applyRankProgress: (facts, { patron, awardInk }) => {
@@ -58,6 +72,22 @@ export const useVolumes = create<VolumeStoreState>()(
         });
       },
       clearRankCelebration: () => set({ celebrateRankId: null }),
+      markOpened: (volumeId, isoDate) => {
+        const existing = get().firstOpenedAt[volumeId];
+        if (existing) return false;
+        set((s) => ({ firstOpenedAt: { ...s.firstOpenedAt, [volumeId]: isoDate } }));
+        return true;
+      },
+      hasBeenOpened: (volumeId) => Boolean(get().firstOpenedAt[volumeId]),
+      markCompleted: (volumeId, isoDate) => {
+        const existing = get().completedAt[volumeId];
+        if (existing) return false;
+        set((s) => ({ completedAt: { ...s.completedAt, [volumeId]: isoDate } }));
+        return true;
+      },
+      hasBeenCompleted: (volumeId) => Boolean(get().completedAt[volumeId]),
+      showCompletionCeremony: (volumeId) => set({ celebrateCompletionId: volumeId }),
+      clearCompletionCeremony: () => set({ celebrateCompletionId: null }),
       markHydrated: () => set({ hydrated: true }),
       reset: () =>
         set({
@@ -65,6 +95,9 @@ export const useVolumes = create<VolumeStoreState>()(
           highestRankOrder: 0,
           rankInitialized: false,
           celebrateRankId: null,
+          firstOpenedAt: {},
+          completedAt: {},
+          celebrateCompletionId: null,
         }),
     }),
     {
@@ -74,6 +107,8 @@ export const useVolumes = create<VolumeStoreState>()(
         activeVolume: s.activeVolume,
         highestRankOrder: s.highestRankOrder,
         rankInitialized: s.rankInitialized,
+        firstOpenedAt: s.firstOpenedAt,
+        completedAt: s.completedAt,
       }),
       onRehydrateStorage: () => (state) => {
         state?.markHydrated();

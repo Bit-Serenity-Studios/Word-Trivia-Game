@@ -7,6 +7,9 @@ export type TelemetryEventName =
   | 'rank_up'
   | 'volume_unlocked'
   | 'volume_opened'
+  | 'volume_completed'
+  | 'curator_letter_viewed'
+  | 'curator_letter_dismissed'
   | 'nightly_completed'
   | 'cabinet_unlocked'
   | 'familiar_forage_started'
@@ -95,6 +98,9 @@ export const EVENT_NAMES: readonly TelemetryEventName[] = [
   'rank_up',
   'volume_unlocked',
   'volume_opened',
+  'volume_completed',
+  'curator_letter_viewed',
+  'curator_letter_dismissed',
   'nightly_completed',
   'cabinet_unlocked',
   'familiar_forage_started',
