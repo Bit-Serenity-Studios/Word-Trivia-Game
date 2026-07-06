@@ -19,6 +19,7 @@ import { RANKS, type Rank } from '@/game/ranks';
 import { unlockedCount } from '@/game/cabinet';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useTelemetry } from '@/components/TelemetryProvider';
 
 export default function VolumePlayScreen() {
   const t = useTheme();
@@ -58,6 +59,7 @@ export default function VolumePlayScreen() {
   const patron = useEntitlements((s) => s.patron);
 
   const bestNightly = useDaily((s) => s.bestStreak);
+  const telemetry = useTelemetry();
 
   const applyRankProgress = useVolumes((s) => s.applyRankProgress);
   const celebrateRankId = useVolumes((s) => s.celebrateRankId);
@@ -81,23 +83,65 @@ export default function VolumePlayScreen() {
     if (!hydrated || !volume) return;
     if (mode !== 'volume' || activeVolume !== volume.id || !round) {
       startNext({ volumeId: volume.id });
+      telemetry.track('volume_opened', { volume: volume.id });
     }
-  }, [hydrated, volume, mode, activeVolume, round, startNext]);
+  }, [hydrated, volume, mode, activeVolume, round, startNext, telemetry]);
 
   useEffect(() => {
     if (volume) setActiveVolume(volume.id);
     return () => setActiveVolume(null);
   }, [volume, setActiveVolume]);
 
+  const resolvedRoundKey = phase === 'resolving-correct' ? roundId : null;
+  const roundIsRare = isRare;
+  const roundHintsUsed = round?.hintsUsed ?? 0;
+  const roundQuestionTier = round?.question.tier ?? null;
   useEffect(() => {
     if (!hydrated || !volumesHydrated) return;
-    if (phase !== 'resolving-correct') return;
+    if (!resolvedRoundKey || !volume) return;
     const cabinet = unlockedCount(entries);
-    applyRankProgress({ entries, cabinet, nightlyBest: bestNightly }, {
+    telemetry.track('entry_solved', {
+      questionId: resolvedRoundKey,
+      volume: volume.id,
+      tier: roundQuestionTier,
+      rare: roundIsRare,
+      hintsUsed: roundHintsUsed,
+      ink: lastReward ?? 0,
+    });
+    if (roundIsRare) {
+      telemetry.track('sealed_solved', {
+        questionId: resolvedRoundKey,
+        volume: volume.id,
+        ink: lastReward ?? 0,
+      });
+    }
+    const gained = applyRankProgress({ entries, cabinet, nightlyBest: bestNightly }, {
       patron,
       awardInk,
     });
-  }, [phase, entries, bestNightly, patron, applyRankProgress, awardInk, hydrated, volumesHydrated]);
+    if (gained) {
+      telemetry.track('rank_up', {
+        rank: gained.id,
+        order: gained.order,
+        patron,
+      });
+    }
+  }, [
+    resolvedRoundKey,
+    roundIsRare,
+    roundHintsUsed,
+    roundQuestionTier,
+    volume,
+    entries,
+    bestNightly,
+    patron,
+    lastReward,
+    applyRankProgress,
+    awardInk,
+    telemetry,
+    hydrated,
+    volumesHydrated,
+  ]);
 
   const wrongAttempts = round?.wrongAttempts ?? 0;
   const rescueEligible =

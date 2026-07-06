@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CandleGlow } from '@/components/CandleGlow';
@@ -8,6 +8,7 @@ import { useEntitlements } from '@/state/entitlementsStore';
 import { useLedger } from '@/state/ledgerStore';
 import { useIap } from '@/components/IapHost';
 import { useRewardedAds } from '@/components/RewardedAdProvider';
+import { useTelemetry } from '@/components/TelemetryProvider';
 import { useHaptics } from '@/hooks/useHaptics';
 import { dateKey } from '@/game/daily';
 
@@ -16,7 +17,11 @@ export default function StoreScreen() {
   const iap = useIap();
   const ads = useRewardedAds();
   const haptics = useHaptics();
+  const telemetry = useTelemetry();
   const patron = useEntitlements((s) => s.patron);
+  useEffect(() => {
+    telemetry.track('store_viewed', { patron });
+  }, [telemetry, patron]);
   const hintCredits = useEntitlements((s) => s.hintCredits);
   const markGiftClaimed = useEntitlements((s) => s.markGiftClaimed);
   const hasGiftFor = useEntitlements((s) => s.hasGiftFor);

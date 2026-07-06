@@ -7,6 +7,8 @@ import { PlaySurface } from '@/components/PlaySurface';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useDaily } from '@/state/dailyStore';
 import { useLedger } from '@/state/ledgerStore';
+import { useEntitlements } from '@/state/entitlementsStore';
+import { useTelemetry } from '@/components/TelemetryProvider';
 import { bundledSource } from '@/content/source';
 import { dailyPickId, dateKey, dailyShareText } from '@/game/daily';
 import { mulberry32, seedFromString } from '@/game/rng';
@@ -46,6 +48,9 @@ export default function DailyScreen() {
   const awardInk = useLedger((s) => s.awardInk);
   const spendInk = useLedger((s) => s.spendInk);
   const ink = useLedger((s) => s.ink);
+  const hintCredits = useEntitlements((s) => s.hintCredits);
+  const consumeHintCredit = useEntitlements((s) => s.consumeHintCredit);
+  const telemetry = useTelemetry();
 
   useEffect(() => {
     if (!entered) return;
@@ -75,6 +80,12 @@ export default function DailyScreen() {
         setRound(next);
         setLastReward(reward.total);
         setPhase('resolving-correct');
+        telemetry.track('nightly_completed', {
+          key: todayKey,
+          category: next.question.category,
+          hintsUsed: next.hintsUsed,
+          ink: reward.total,
+        });
       } else {
         setRound(incrementWrong(next));
         setWrongFlash((n) => n + 1);
@@ -85,7 +96,7 @@ export default function DailyScreen() {
         }, 500);
       }
     },
-    [round, phase, awardInk, daily, todayKey],
+    [round, phase, awardInk, daily, todayKey, telemetry],
   );
 
   const onReturn = useCallback(
@@ -98,10 +109,14 @@ export default function DailyScreen() {
 
   const onHint = useCallback(() => {
     if (!round || phase !== 'playing') return;
-    if (ink < HINT_COST) return;
+    if (hintCredits <= 0 && ink < HINT_COST) return;
     const result = revealLetter(round);
     if (result.revealedIndex === null) return;
-    spendInk(HINT_COST);
+    if (hintCredits > 0) {
+      if (!consumeHintCredit()) return;
+    } else {
+      if (!spendInk(HINT_COST)) return;
+    }
     const nextRound = result.state;
     const check = checkAnswer(nextRound);
     if (check === 'correct') {
@@ -114,9 +129,15 @@ export default function DailyScreen() {
       daily.recordCompletion(todayKey, nextRound.question.id, reward.total);
       setLastReward(reward.total);
       setPhase('resolving-correct');
+      telemetry.track('nightly_completed', {
+        key: todayKey,
+        category: nextRound.question.category,
+        hintsUsed: nextRound.hintsUsed,
+        ink: reward.total,
+      });
     }
     setRound(nextRound);
-  }, [round, phase, ink, spendInk, awardInk, daily, todayKey]);
+  }, [round, phase, ink, hintCredits, consumeHintCredit, spendInk, awardInk, daily, todayKey, telemetry]);
 
   const shareResult = useCallback(async () => {
     const message = dailyShareText({
@@ -191,8 +212,12 @@ export default function DailyScreen() {
           </Text>
         </View>
       }
-      primaryActionLabel={`REVEAL LETTER  ·  ${HINT_COST} ink`}
-      primaryActionEnabled={phase === 'playing' && ink >= HINT_COST}
+      primaryActionLabel={
+        hintCredits > 0
+          ? `REVEAL LETTER  ·  ${hintCredits} in hand`
+          : `REVEAL LETTER  ·  ${HINT_COST} ink`
+      }
+      primaryActionEnabled={phase === 'playing' && (hintCredits > 0 || ink >= HINT_COST)}
       onPrimaryAction={onHint}
       onPlace={onPlace}
       onReturn={onReturn}

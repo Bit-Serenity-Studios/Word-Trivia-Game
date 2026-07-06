@@ -12,6 +12,7 @@ import { economy } from '@/game/economy';
 import type { IapProvider, PurchaseAttempt } from '@/services/iap';
 import { useEntitlements } from '@/state/entitlementsStore';
 import { useLedger } from '@/state/ledgerStore';
+import { useTelemetry } from './TelemetryProvider';
 
 interface Pending {
   sku: string;
@@ -39,6 +40,7 @@ export function IapHost({ children }: { children: React.ReactNode }) {
   const pendingRef = useRef<Pending | null>(null);
   const entitlements = useEntitlements();
   const awardInk = useLedger((s) => s.awardInk);
+  const telemetry = useTelemetry();
 
   pendingRef.current = pending;
 
@@ -65,6 +67,7 @@ export function IapHost({ children }: { children: React.ReactNode }) {
   const purchase = useCallback(
     (sku: string): Promise<PurchaseAttempt> => {
       const product = productFor(sku);
+      telemetry.track('iap_intent', { sku, resolved: Boolean(product) });
       if (!product) {
         return Promise.resolve({ sku, outcome: 'error' });
       }
@@ -81,19 +84,22 @@ export function IapHost({ children }: { children: React.ReactNode }) {
         });
       });
     },
-    [entitlements.patron],
+    [entitlements.patron, telemetry],
   );
 
   const finish = useCallback(
     (outcome: 'purchased' | 'cancelled') => {
       const cur = pendingRef.current;
       if (!cur) return;
+      telemetry.track(outcome === 'purchased' ? 'iap_confirmed' : 'iap_cancelled', {
+        sku: cur.sku,
+      });
       if (outcome === 'purchased') applyPurchase(cur.sku);
       cur.resolve({ sku: cur.sku, outcome });
       pendingRef.current = null;
       setPending(null);
     },
-    [applyPurchase],
+    [applyPurchase, telemetry],
   );
 
   const restore = useCallback(async (): Promise<string[]> => {

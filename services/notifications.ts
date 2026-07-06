@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import type { TimeIntervalTriggerInput } from 'expo-notifications';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -9,22 +10,45 @@ Notifications.setNotificationHandler({
   }),
 });
 
-let permissionCache: 'unknown' | 'granted' | 'denied' = 'unknown';
+export type PermissionStatus = 'granted' | 'denied' | 'blocked' | 'unknown';
 
-export async function ensurePermission(): Promise<boolean> {
-  if (permissionCache === 'granted') return true;
+let permissionCache: PermissionStatus = 'unknown';
+
+export async function checkPermission(): Promise<PermissionStatus> {
   const existing = await Notifications.getPermissionsAsync();
   if (existing.granted) {
     permissionCache = 'granted';
-    return true;
+    return 'granted';
   }
   if (!existing.canAskAgain) {
-    permissionCache = 'denied';
-    return false;
+    permissionCache = 'blocked';
+    return 'blocked';
+  }
+  permissionCache = 'denied';
+  return 'denied';
+}
+
+export async function askPermission(): Promise<PermissionStatus> {
+  const existing = await Notifications.getPermissionsAsync();
+  if (existing.granted) {
+    permissionCache = 'granted';
+    return 'granted';
+  }
+  if (!existing.canAskAgain) {
+    permissionCache = 'blocked';
+    return 'blocked';
   }
   const requested = await Notifications.requestPermissionsAsync();
-  permissionCache = requested.granted ? 'granted' : 'denied';
-  return requested.granted;
+  if (requested.granted) {
+    permissionCache = 'granted';
+    return 'granted';
+  }
+  permissionCache = 'denied';
+  return 'denied';
+}
+
+export function cachedPermission(): PermissionStatus {
+  return permissionCache;
 }
 
 const CHANNEL_ID = 'athenaeum-familiar';
@@ -40,18 +64,21 @@ async function ensureChannel(): Promise<void> {
 }
 
 export async function scheduleForagingReturn(delaySeconds: number): Promise<string | null> {
-  const permitted = await ensurePermission();
-  if (!permitted) return null;
+  const status = await checkPermission();
+  if (status !== 'granted') return null;
   await ensureChannel();
+  const seconds = Math.max(1, Math.round(delaySeconds));
+  const trigger: TimeIntervalTriggerInput = {
+    seconds,
+    repeats: false,
+    ...(Platform.OS === 'android' ? { channelId: CHANNEL_ID } : {}),
+  };
   return Notifications.scheduleNotificationAsync({
     content: {
       title: 'Your familiar has returned.',
       body: 'The spectral owl waits by the desk with a hoard from the stacks.',
     },
-    trigger: {
-      seconds: Math.max(1, Math.round(delaySeconds)),
-      channelId: Platform.OS === 'android' ? CHANNEL_ID : undefined,
-    },
+    trigger,
   });
 }
 

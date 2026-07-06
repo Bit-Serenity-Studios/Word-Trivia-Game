@@ -1,21 +1,32 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CandleGlow } from '@/components/CandleGlow';
 import { ArtifactCard } from '@/components/ArtifactCard';
 import { FamiliarPanel } from '@/components/FamiliarPanel';
+import { EmptyState } from '@/components/EmptyState';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLedger } from '@/state/ledgerStore';
 import { ARTIFACTS, isUnlocked, nextArtifact, unlockedCount } from '@/game/cabinet';
+import { useTelemetry } from '@/components/TelemetryProvider';
 
 export default function CabinetScreen() {
   const t = useTheme();
   const entries = useLedger((s) => s.entries);
+  const telemetry = useTelemetry();
   const total = ARTIFACTS.length;
   const unlocked = unlockedCount(entries);
   const owl = ARTIFACTS.find((a) => a.kind === 'spectral-owl')!;
   const owlUnlocked = isUnlocked(entries, owl);
   const upcoming = nextArtifact(entries);
+
+  const lastUnlockedRef = useRef<number>(unlocked);
+  useEffect(() => {
+    if (unlocked > lastUnlockedRef.current) {
+      telemetry.track('cabinet_unlocked', { total: unlocked });
+      lastUnlockedRef.current = unlocked;
+    }
+  }, [unlocked, telemetry]);
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.ink }}>
@@ -40,6 +51,14 @@ export default function CabinetScreen() {
           </Text>
 
           <FamiliarPanel owlUnlocked={owlUnlocked} />
+
+          {unlocked === 0 ? (
+            <EmptyState
+              heading="The shelf is bare."
+              body="Every entry you catalogue leaves something behind — a pressed frond, a beeswax taper, an astrolabe. The first arrives at three entries."
+              glyph="candle"
+            />
+          ) : null}
 
           <View style={styles.grid}>
             {ARTIFACTS.map((a) => (

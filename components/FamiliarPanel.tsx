@@ -1,32 +1,71 @@
 import React, { useCallback, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { ArtifactSVG } from './ArtifactSVG';
 import { CountdownText } from './CountdownText';
+import { NotificationCeremony } from './NotificationCeremony';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useFamiliar } from '@/state/familiarStore';
 import { useLedger } from '@/state/ledgerStore';
+import { useOnboarding } from '@/state/onboardingStore';
 import { FORAGE_DURATION_MS, hoardFlavor, type HoardReward } from '@/game/familiar';
 import { useHaptics } from '@/hooks/useHaptics';
+import { useTelemetry } from './TelemetryProvider';
+import { askPermission } from '@/services/notifications';
+import { dateKey } from '@/game/daily';
 
 export function FamiliarPanel({ owlUnlocked }: { owlUnlocked: boolean }) {
   const t = useTheme();
   const haptics = useHaptics();
   const familiar = useFamiliar();
   const awardInk = useLedger((s) => s.awardInk);
+  const askedNotificationAt = useOnboarding((s) => s.askedNotificationAt);
+  const markNotificationAsked = useOnboarding((s) => s.markNotificationAsked);
+  const telemetry = useTelemetry();
   const [lastReward, setLastReward] = useState<HoardReward | null>(null);
   const [tick, setTick] = useState(0);
+  const [ceremonyOpen, setCeremonyOpen] = useState(false);
 
   const startedAt = familiar.taskStartedAt;
   const foraging = startedAt !== null;
   const deadline = startedAt !== null ? startedAt + FORAGE_DURATION_MS : 0;
   const ready = foraging && Date.now() >= deadline;
 
-  const onStart = useCallback(async () => {
+  const beginForaging = useCallback(async () => {
     haptics.soft();
     setLastReward(null);
     await familiar.startForaging();
+    telemetry.track('familiar_forage_started');
     setTick((n) => n + 1);
-  }, [familiar, haptics]);
+  }, [familiar, haptics, telemetry]);
+
+  const onStart = useCallback(() => {
+    if (!askedNotificationAt && Platform.OS !== 'web') {
+      setCeremonyOpen(true);
+      return;
+    }
+    void beginForaging();
+  }, [askedNotificationAt, beginForaging]);
+
+  const onCeremonyAccept = useCallback(async () => {
+    const today = dateKey(new Date());
+    setCeremonyOpen(false);
+    markNotificationAsked(today);
+    telemetry.track('notification_permission_asked');
+    const outcome = await askPermission();
+    telemetry.track(
+      outcome === 'granted' ? 'notification_permission_granted' : 'notification_permission_denied',
+      { outcome },
+    );
+    void beginForaging();
+  }, [markNotificationAsked, telemetry, beginForaging]);
+
+  const onCeremonyDecline = useCallback(() => {
+    const today = dateKey(new Date());
+    setCeremonyOpen(false);
+    markNotificationAsked(today);
+    telemetry.track('notification_permission_denied', { outcome: 'declined-ceremony' });
+    void beginForaging();
+  }, [markNotificationAsked, telemetry, beginForaging]);
 
   const onCollect = useCallback(() => {
     const reward = familiar.collectHoard(Date.now());
@@ -34,9 +73,10 @@ export function FamiliarPanel({ owlUnlocked }: { owlUnlocked: boolean }) {
       awardInk(reward.ink);
       haptics.success();
       setLastReward(reward);
+      telemetry.track('familiar_reward_claimed', { tier: reward.tier, ink: reward.ink });
     }
     setTick((n) => n + 1);
-  }, [familiar, awardInk, haptics]);
+  }, [familiar, awardInk, haptics, telemetry]);
 
   const onCancel = useCallback(async () => {
     await familiar.cancelForaging();
@@ -120,6 +160,11 @@ export function FamiliarPanel({ owlUnlocked }: { owlUnlocked: boolean }) {
           <PanelButton label="CALL BACK" onPress={onCancel} />
         )}
       </View>
+      <NotificationCeremony
+        visible={ceremonyOpen}
+        onAccept={onCeremonyAccept}
+        onDecline={onCeremonyDecline}
+      />
     </View>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -15,6 +15,7 @@ import { useDaily } from '@/state/dailyStore';
 import { useVolumes } from '@/state/volumeStore';
 import { unlockedCount } from '@/game/cabinet';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useTelemetry } from '@/components/TelemetryProvider';
 
 export default function PlayShelf() {
   const t = useTheme();
@@ -49,6 +50,17 @@ export default function PlayShelf() {
 
   const pool = useMemo(() => bundledSource.allQuestions(), []);
   const progress = useMemo(() => volumeProgress(pool, seenIds), [pool, seenIds]);
+
+  const telemetry = useTelemetry();
+  const unlockedRef = useRef<Set<VolumeId>>(new Set());
+  useEffect(() => {
+    for (const p of progress) {
+      if (p.unlocked && !unlockedRef.current.has(p.volume.id)) {
+        unlockedRef.current.add(p.volume.id);
+        if (entries > 0) telemetry.track('volume_unlocked', { volume: p.volume.id });
+      }
+    }
+  }, [progress, entries, telemetry]);
 
   const openVolume = (id: VolumeId) => {
     router.push({ pathname: '/volume/[id]', params: { id } });

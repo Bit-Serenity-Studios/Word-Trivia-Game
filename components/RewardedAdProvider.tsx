@@ -24,6 +24,7 @@ import {
 } from '@/services/ads';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useEntitlements } from '@/state/entitlementsStore';
+import { useTelemetry } from './TelemetryProvider';
 
 interface Pending {
   placement: RewardedPlacement;
@@ -44,6 +45,7 @@ export function RewardedAdHost({ children }: { children: React.ReactNode }) {
   const [done, setDone] = useState(false);
   const isPatron = useEntitlements((s) => s.patron);
   const pendingRef = useRef<Pending | null>(null);
+  const telemetry = useTelemetry();
 
   useEffect(() => {
     pendingRef.current = pending;
@@ -51,13 +53,14 @@ export function RewardedAdHost({ children }: { children: React.ReactNode }) {
 
   const showAd = useCallback(
     (placement: RewardedPlacement): Promise<RewardedAdResult> => {
+      telemetry.track('ad_offered', { placement, patronBypass: isPatron });
       if (isPatron) return Promise.resolve({ shown: false, rewarded: true });
       return new Promise((resolve) => {
         setDone(false);
         setPending({ placement, resolve, startedAt: Date.now() });
       });
     },
-    [isPatron],
+    [isPatron, telemetry],
   );
 
   useEffect(() => {
@@ -68,14 +71,22 @@ export function RewardedAdHost({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(id);
   }, [pending]);
 
-  const finish = useCallback((rewarded: boolean) => {
-    const cur = pendingRef.current;
-    if (!cur) return;
-    cur.resolve({ shown: true, rewarded });
-    pendingRef.current = null;
-    setPending(null);
-    setDone(false);
-  }, []);
+  const finish = useCallback(
+    (rewarded: boolean) => {
+      const cur = pendingRef.current;
+      if (!cur) return;
+      telemetry.track(rewarded ? 'ad_watched' : 'ad_declined', {
+        placement: cur.placement,
+        durationMs: Date.now() - cur.startedAt,
+      });
+      if (rewarded) telemetry.track('ad_reward_claimed', { placement: cur.placement });
+      cur.resolve({ shown: true, rewarded });
+      pendingRef.current = null;
+      setPending(null);
+      setDone(false);
+    },
+    [telemetry],
+  );
 
   const provider = useMemo<RewardedAdProvider>(
     () => ({

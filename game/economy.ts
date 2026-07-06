@@ -50,6 +50,10 @@ export const economy = {
   ranks: {
     patronBonus: 0.25,
   },
+  onboarding: {
+    coachedQuestionId: 'bb-fern',
+    notificationAskAfterEntries: 3,
+  },
   iap: {
     patron: {
       sku: 'com.athenaeum.patron',

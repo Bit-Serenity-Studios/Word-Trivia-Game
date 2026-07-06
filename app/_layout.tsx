@@ -22,6 +22,7 @@ import { ThemeProvider } from '@/theme/ThemeProvider';
 import { palette } from '@/theme/tokens';
 import { RewardedAdHost } from '@/components/RewardedAdProvider';
 import { IapHost } from '@/components/IapHost';
+import { TelemetryProvider } from '@/components/TelemetryProvider';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -54,18 +55,20 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.ink }}>
       <SafeAreaProvider>
         <ThemeProvider>
-          <IapHost>
-            <RewardedAdHost>
-              <StatusBar style="light" />
-              <Stack
-                screenOptions={{
-                  headerShown: false,
-                  contentStyle: { backgroundColor: palette.ink },
-                  animation: 'fade',
-                }}
-              />
-            </RewardedAdHost>
-          </IapHost>
+          <TelemetryProvider>
+            <IapHost>
+              <RewardedAdHost>
+                <StatusBar style="light" />
+                <Stack
+                  screenOptions={{
+                    headerShown: false,
+                    contentStyle: { backgroundColor: palette.ink },
+                    animation: 'fade',
+                  }}
+                />
+              </RewardedAdHost>
+            </IapHost>
+          </TelemetryProvider>
         </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
