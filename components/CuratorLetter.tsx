@@ -5,6 +5,7 @@ import Svg, { Line } from 'react-native-svg';
 import type { CuratorLetter as CuratorLetterData } from '@/game/curators';
 import type { Volume } from '@/game/volumes';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useMessages } from '@/i18n/useMessages';
 
 interface Props {
   visible: boolean;
@@ -15,6 +16,7 @@ interface Props {
 
 export function CuratorLetter({ visible, volume, letter, onDismiss }: Props) {
   const t = useTheme();
+  const m = useMessages();
   return (
     <Modal
       transparent
@@ -41,7 +43,7 @@ export function CuratorLetter({ visible, volume, letter, onDismiss }: Props) {
                   marginBottom: 4,
                 }}
               >
-                A LETTER TO THE READER
+                {m.curator.letterHeader}
               </Text>
               <Text
                 style={{
@@ -124,7 +126,7 @@ export function CuratorLetter({ visible, volume, letter, onDismiss }: Props) {
                     letterSpacing: 1.2,
                   }}
                 >
-                  READ LATER
+                  {m.common.readLater}
                 </Text>
               </Pressable>
               <View style={{ width: 12 }} />
@@ -146,7 +148,7 @@ export function CuratorLetter({ visible, volume, letter, onDismiss }: Props) {
                     letterSpacing: 1.2,
                   }}
                 >
-                  BEGIN THE VOLUME
+                  {m.curator.beginTheVolume}
                 </Text>
               </Pressable>
             </View>

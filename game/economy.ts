@@ -44,8 +44,9 @@ export const economy = {
     dailyGiftHints: 0,
   },
   interstitial: {
-    minSolvesBetween: 1,
-    minMsBetween: 0,
+    minSolvesBetween: 3,
+    minMsBetween: 60000,
+    minMsAfterRewarded: 20000,
     stubDurationMs: 3000,
   },
   rareVolume: {

@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import * as SystemUI from 'expo-system-ui';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View } from 'react-native';
+import { NativeModules, Platform, View } from 'react-native';
 import {
   useFonts as useCormorant,
   CormorantGaramond_500Medium_Italic,
@@ -25,8 +25,26 @@ import { IapHost } from '@/components/IapHost';
 import { InterstitialHost } from '@/components/InterstitialHost';
 import { TelemetryProvider } from '@/components/TelemetryProvider';
 import { MusicHost } from '@/components/MusicHost';
+import { useLocale } from '@/state/localeStore';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+
+function readDeviceLocale(): string | null {
+  try {
+    if (Platform.OS === 'ios') {
+      const settings = NativeModules.SettingsManager?.settings;
+      const first = settings?.AppleLanguages?.[0] ?? settings?.AppleLocale;
+      return typeof first === 'string' ? first : null;
+    }
+    if (Platform.OS === 'android') {
+      const raw = NativeModules.I18nManager?.localeIdentifier;
+      return typeof raw === 'string' ? raw : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 
 export default function RootLayout() {
   const [cormorantLoaded] = useCormorant({
@@ -40,6 +58,18 @@ export default function RootLayout() {
   });
 
   const ready = cormorantLoaded && garamondLoaded;
+
+  const localeHydrated = useLocale((s) => s.hydrated);
+  const localePersisted = useLocale((s) => s.locale);
+  const setFromDevice = useLocale((s) => s.setFromDevicePreference);
+  const deviceLocaleAppliedRef = React.useRef(false);
+  useEffect(() => {
+    if (!localeHydrated || deviceLocaleAppliedRef.current) return;
+    deviceLocaleAppliedRef.current = true;
+    if (localePersisted !== 'en') return;
+    const device = readDeviceLocale();
+    if (device) setFromDevice(device);
+  }, [localeHydrated, localePersisted, setFromDevice]);
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(palette.ink).catch(() => undefined);

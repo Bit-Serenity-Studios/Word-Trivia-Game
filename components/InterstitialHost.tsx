@@ -24,6 +24,7 @@ import {
 import { resolveInterstitialProvider } from '@/services/providerFactories';
 import { interstitialCadencePermits, shouldShowInterstitial } from '@/services/adPolicy';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useMessages } from '@/i18n/useMessages';
 import { useEntitlements } from '@/state/entitlementsStore';
 import { useAdCadence } from '@/state/adCadenceStore';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -109,8 +110,10 @@ export function InterstitialHost({ children }: { children: React.ReactNode }) {
         nowMs,
         solvesSinceLastShow: state.solvesSinceLastInterstitial,
         lastShownAtMs: state.lastInterstitialAtMs,
+        lastRewardedAtMs: state.lastRewardedAtMs,
         minSolvesBetween: economy.interstitial.minSolvesBetween,
         minMsBetween: economy.interstitial.minMsBetween,
+        minMsAfterRewarded: economy.interstitial.minMsAfterRewarded,
       });
       if (!permitted) {
         return { shown: false, closed: true };
@@ -150,6 +153,7 @@ function InterstitialStubModal({
   onClose: () => void;
 }) {
   const t = useTheme();
+  const m = useMessages();
   const copy = placementCopy(placement);
   const reduced = useReducedMotion();
   const spin = useSharedValue(0);
@@ -183,8 +187,8 @@ function InterstitialStubModal({
           accessible
           accessibilityLabel={
             done
-              ? 'Advertisement complete. Close to continue.'
-              : 'Advertisement playing. Please wait.'
+              ? `${m.ads.advertisement}. ${m.ads.stubDone}`
+              : `${m.ads.advertisement}. ${m.ads.stubTitle}`
           }
         >
           <Text
@@ -195,7 +199,7 @@ function InterstitialStubModal({
               letterSpacing: 2,
             }}
           >
-            ADVERTISEMENT
+            {m.ads.advertisement}
           </Text>
           <Text
             style={{
@@ -206,7 +210,7 @@ function InterstitialStubModal({
               textAlign: 'center',
             }}
           >
-            {done ? 'The announcement has ended.' : copy.title}
+            {done ? m.ads.stubDone : copy.title}
           </Text>
           <Text
             style={{
@@ -218,7 +222,7 @@ function InterstitialStubModal({
               lineHeight: 20,
             }}
           >
-            {done ? 'Return to the archives.' : copy.body}
+            {done ? m.ads.stubDoneBody : copy.body}
           </Text>
           <View style={{ height: 24 }} />
           {!done ? (
@@ -239,7 +243,7 @@ function InterstitialStubModal({
             <Pressable
               onPress={onClose}
               accessibilityRole="button"
-              accessibilityLabel="Close advertisement and continue"
+              accessibilityLabel={m.common.continue}
               style={[
                 styles.close,
                 { borderColor: t.palette.gold, backgroundColor: 'rgba(201, 162, 39, 0.10)' },
@@ -253,7 +257,7 @@ function InterstitialStubModal({
                   letterSpacing: 1.2,
                 }}
               >
-                CONTINUE
+                {m.common.continue}
               </Text>
             </Pressable>
           )}

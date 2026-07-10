@@ -5,6 +5,7 @@ import { VolumeCover } from './VolumeCover';
 import type { CuratorLetter } from '@/game/curators';
 import type { Volume } from '@/game/volumes';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useMessages } from '@/i18n/useMessages';
 
 interface Props {
   visible: boolean;
@@ -16,6 +17,7 @@ interface Props {
 
 export function VolumeCompletion({ visible, volume, letter, inkReward, onDismiss }: Props) {
   const t = useTheme();
+  const m = useMessages();
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onDismiss}>
       <View style={[styles.backdrop, { backgroundColor: 'rgba(23, 19, 16, 0.92)' }]}>
@@ -35,7 +37,7 @@ export function VolumeCompletion({ visible, volume, letter, inkReward, onDismiss
                 textAlign: 'center',
               }}
             >
-              VOLUME COMPLETE
+              {m.completion.header}
             </Text>
 
             <View style={styles.coverWell}>
@@ -87,7 +89,7 @@ export function VolumeCompletion({ visible, volume, letter, inkReward, onDismiss
                 marginTop: 20,
               }}
             >
-              +{inkReward} ink
+              {m.completion.inkReward(inkReward)}
             </Text>
 
             <Pressable
@@ -105,7 +107,7 @@ export function VolumeCompletion({ visible, volume, letter, inkReward, onDismiss
                   letterSpacing: 1.2,
                 }}
               >
-                RETURN TO THE SHELF
+                {m.completion.returnToShelf}
               </Text>
             </Pressable>
           </View>

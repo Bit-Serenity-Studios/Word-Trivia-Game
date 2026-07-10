@@ -5,6 +5,7 @@ import { resolveBannerProvider, NullBannerProvider } from '@/services/providerFa
 import { shouldShowBanner } from '@/services/adPolicy';
 import { useEntitlements } from '@/state/entitlementsStore';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useMessages } from '@/i18n/useMessages';
 
 interface Props {
   slot: BannerSlot;
@@ -13,6 +14,7 @@ interface Props {
 export function AdBanner({ slot }: Props) {
   const patron = useEntitlements((s) => s.patron);
   const t = useTheme();
+  const m = useMessages();
 
   const provider = useMemo(() => resolveBannerProvider(NullBannerProvider), []);
   const usingStub = provider === NullBannerProvider;
@@ -46,7 +48,7 @@ export function AdBanner({ slot }: Props) {
           letterSpacing: 1.8,
         }}
       >
-        ADVERTISEMENT · SIMULATED · {slot.toUpperCase()}
+        {m.ads.advertisement} · {m.ads.simulated} · {slot.toUpperCase()}
       </Text>
       <Text
         style={{
@@ -56,7 +58,7 @@ export function AdBanner({ slot }: Props) {
           marginTop: 2,
         }}
       >
-        Patron of the Athenaeum removes every advertisement.
+        {m.ads.patronRemoves}
       </Text>
     </View>
   );

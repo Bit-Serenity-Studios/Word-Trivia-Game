@@ -2,6 +2,7 @@ import React from 'react';
 import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { EmptyState } from './EmptyState';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useMessages } from '@/i18n/useMessages';
 
 interface Props {
   visible: boolean;
@@ -11,13 +12,14 @@ interface Props {
 
 export function NotificationCeremony({ visible, onAccept, onDecline }: Props) {
   const t = useTheme();
+  const m = useMessages();
   return (
     <Modal transparent animationType="fade" visible={visible} onRequestClose={onDecline}>
       <View style={[styles.backdrop, { backgroundColor: 'rgba(23, 19, 16, 0.85)' }]}>
         <View style={[styles.card, { backgroundColor: t.palette.mahogany, borderColor: t.palette.gold }]}>
           <EmptyState
-            heading="May the raven send word?"
-            body="Only when your familiar returns from foraging, and never at inconvenient hours. You may revoke this in Settings."
+            heading={m.notification.heading}
+            body={m.notification.body}
             glyph="raven"
           />
           <View style={styles.actions}>
@@ -30,7 +32,7 @@ export function NotificationCeremony({ visible, onAccept, onDecline }: Props) {
                   letterSpacing: 1.2,
                 }}
               >
-                NOT NOW
+                {m.common.notNow}
               </Text>
             </Pressable>
             <View style={{ width: 12 }} />
@@ -49,7 +51,7 @@ export function NotificationCeremony({ visible, onAccept, onDecline }: Props) {
                   letterSpacing: 1.2,
                 }}
               >
-                SEND WORD
+                {m.notification.sendWord}
               </Text>
             </Pressable>
           </View>

@@ -9,6 +9,8 @@ import { useDaily } from '@/state/dailyStore';
 import { useLedger } from '@/state/ledgerStore';
 import { useEntitlements } from '@/state/entitlementsStore';
 import { useTelemetry } from '@/components/TelemetryProvider';
+import { useInterstitial } from '@/components/InterstitialHost';
+import { useAdCadence } from '@/state/adCadenceStore';
 import { bundledSource } from '@/content/source';
 import { dailyPickId, dateKey, dailyShareText } from '@/game/daily';
 import { mulberry32, seedFromString } from '@/game/rng';
@@ -51,6 +53,8 @@ export default function DailyScreen() {
   const hintCredits = useEntitlements((s) => s.hintCredits);
   const consumeHintCredit = useEntitlements((s) => s.consumeHintCredit);
   const telemetry = useTelemetry();
+  const interstitial = useInterstitial();
+  const recordSolveForCadence = useAdCadence((s) => s.recordSolve);
 
   useEffect(() => {
     if (!entered) return;
@@ -86,6 +90,8 @@ export default function DailyScreen() {
           hintsUsed: next.hintsUsed,
           ink: reward.total,
         });
+        recordSolveForCadence();
+        void interstitial.offer('post-nightly');
       } else {
         setRound(incrementWrong(next));
         setWrongFlash((n) => n + 1);
@@ -96,7 +102,7 @@ export default function DailyScreen() {
         }, 500);
       }
     },
-    [round, phase, awardInk, daily, todayKey, telemetry],
+    [round, phase, awardInk, daily, todayKey, telemetry, interstitial, recordSolveForCadence],
   );
 
   const onReturn = useCallback(
@@ -135,9 +141,11 @@ export default function DailyScreen() {
         hintsUsed: nextRound.hintsUsed,
         ink: reward.total,
       });
+      recordSolveForCadence();
+      void interstitial.offer('post-nightly');
     }
     setRound(nextRound);
-  }, [round, phase, ink, hintCredits, consumeHintCredit, spendInk, awardInk, daily, todayKey, telemetry]);
+  }, [round, phase, ink, hintCredits, consumeHintCredit, spendInk, awardInk, daily, todayKey, telemetry, interstitial, recordSolveForCadence]);
 
   const shareResult = useCallback(async () => {
     const message = dailyShareText({

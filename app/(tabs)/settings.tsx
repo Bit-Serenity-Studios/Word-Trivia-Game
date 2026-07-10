@@ -11,63 +11,63 @@ import { useOnboarding } from '@/state/onboardingStore';
 import { useIap } from '@/components/IapHost';
 import { useTelemetry } from '@/components/TelemetryProvider';
 import { AdBanner } from '@/components/AdBanner';
+import { useAdCadence } from '@/state/adCadenceStore';
+import { useLocale } from '@/state/localeStore';
+import { useMessages } from '@/i18n/useMessages';
+import { AVAILABLE_LOCALES, localeName } from '@/i18n';
 
 export default function SettingsScreen() {
   const t = useTheme();
   const settings = useSettings();
   const iap = useIap();
   const telemetry = useTelemetry();
+  const m = useMessages();
+  const locale = useLocale((s) => s.locale);
+  const setLocale = useLocale((s) => s.setLocale);
 
   const resetLedger = useLedger((s) => s.reset);
   const resetVolumes = useVolumes((s) => s.reset);
   const resetEntitlements = useEntitlements((s) => s.reset);
   const resetOnboarding = useOnboarding((s) => s.reset);
+  const resetAdCadence = useAdCadence((s) => s.reset);
   const patron = useEntitlements((s) => s.patron);
 
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
 
   const reset = () => {
-    Alert.alert(
-      'Reset the register?',
-      'This erases every entry, every unlocked volume, every earned rank, and every purchase on this device. It cannot be undone.',
-      [
-        { text: 'CANCEL', style: 'cancel' },
-        {
-          text: 'RESET',
-          style: 'destructive',
-          onPress: () => {
-            resetLedger();
-            resetVolumes();
-            resetEntitlements();
-            resetOnboarding();
-            telemetry.track('reset_progress');
-          },
+    Alert.alert(m.settings.resetConfirmTitle, m.settings.resetConfirmBody, [
+      { text: m.common.cancel, style: 'cancel' },
+      {
+        text: 'RESET',
+        style: 'destructive',
+        onPress: () => {
+          resetLedger();
+          resetVolumes();
+          resetEntitlements();
+          resetOnboarding();
+          resetAdCadence();
+          telemetry.track('reset_progress');
         },
-      ],
-    );
+      },
+    ]);
   };
 
   const restore = useCallback(async () => {
     const skus = await iap.restore();
     telemetry.track('iap_restored', { count: skus.length });
     setRestoreMessage(
-      skus.length > 0
-        ? `Restored ${skus.length} purchase${skus.length === 1 ? '' : 's'}.`
-        : 'No prior purchases found on this device.',
+      skus.length > 0 ? m.settings.restored(skus.length) : m.settings.restoredNone,
     );
     setTimeout(() => setRestoreMessage(null), 4000);
-  }, [iap, telemetry]);
+  }, [iap, telemetry, m]);
 
   const share = useCallback(async () => {
     try {
-      await Share.share({
-        message:
-          'The Athenaeum — a candle-lit trivia game for Dark Academia readers. Come catalogue the world one word at a time.',
-      });
+      await Share.share({ message: m.settings.shareMessage });
     } catch {
       // User cancelled or share unavailable.
     }
-  }, []);
+  }, [m]);
 
   const version = appPackage.version;
   const runtime = appPackage.dependencies.expo.replace(/^[~^]/, '');
@@ -79,49 +79,84 @@ export default function SettingsScreen() {
           style={[styles.title, { color: t.palette.parchment, fontFamily: t.fonts.display }]}
           accessibilityRole="header"
         >
-          Settings
+          {m.settings.title}
         </Text>
 
-        <SectionLabel>ACCESSIBILITY</SectionLabel>
+        <SectionLabel>{m.settings.section.accessibility}</SectionLabel>
         <Row
-          label="High contrast"
+          label={m.settings.highContrast}
           value={settings.highContrast}
           onToggle={() => settings.setHighContrast(!settings.highContrast)}
         />
         <Row
-          label="Larger text"
+          label={m.settings.largerText}
           value={settings.textBoost}
           onToggle={() => settings.setTextBoost(!settings.textBoost)}
         />
         <Row
-          label="Reduce motion"
+          label={m.settings.reduceMotion}
           value={settings.reducedMotion}
           onToggle={() => settings.setReducedMotion(!settings.reducedMotion)}
         />
 
-        <SectionLabel>DESK</SectionLabel>
+        <SectionLabel>{m.settings.section.desk}</SectionLabel>
         <Row
-          label="Haptics"
+          label={m.settings.haptics}
           value={settings.hapticsEnabled}
           onToggle={() => settings.setHaptics(!settings.hapticsEnabled)}
         />
         <Row
-          label="Sound effects"
+          label={m.settings.sfx}
           value={settings.sfxEnabled}
           onToggle={() => settings.setSfx(!settings.sfxEnabled)}
         />
         <Row
-          label="Music"
+          label={m.settings.music}
           value={settings.musicEnabled}
           onToggle={() => settings.setMusic(!settings.musicEnabled)}
         />
 
-        <SectionLabel>PATRONAGE</SectionLabel>
+        <SectionLabel>{m.settings.section.language}</SectionLabel>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 }}>
+          {AVAILABLE_LOCALES.map((code) => {
+            const active = code === locale;
+            return (
+              <Pressable
+                key={code}
+                onPress={() => setLocale(code)}
+                accessibilityRole="button"
+                accessibilityLabel={localeName(code)}
+                accessibilityState={{ selected: active }}
+                style={[
+                  styles.pill,
+                  {
+                    marginRight: 8,
+                    marginBottom: 8,
+                    borderColor: active ? t.palette.gold : t.palette.sepia,
+                    backgroundColor: active ? 'rgba(201, 162, 39, 0.10)' : 'transparent',
+                  },
+                ]}
+              >
+                <Text
+                  style={{
+                    color: active ? t.palette.gold : t.palette.parchment,
+                    fontFamily: t.fonts.displayItalic,
+                    letterSpacing: 1.2,
+                  }}
+                >
+                  {localeName(code).toUpperCase()}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <SectionLabel>{m.settings.section.patronage}</SectionLabel>
         <Pressable
           onPress={restore}
           accessibilityRole="button"
-          accessibilityLabel="Restore purchases"
-          accessibilityHint="Re-applies any prior purchases from this account"
+          accessibilityLabel={m.settings.restorePurchases}
+          accessibilityHint={m.settings.restorePurchasesHint}
           style={[styles.pill, { borderColor: t.palette.gold }]}
         >
           <Text
@@ -131,7 +166,7 @@ export default function SettingsScreen() {
               letterSpacing: 1.2,
             }}
           >
-            RESTORE PURCHASES
+            {m.settings.restorePurchases}
           </Text>
         </Pressable>
         {restoreMessage ? (
@@ -155,16 +190,16 @@ export default function SettingsScreen() {
               marginTop: 8,
             }}
           >
-            Enrolled as a Patron of the Athenaeum.
+            {m.settings.enrolledAsPatron}
           </Text>
         ) : null}
 
-        <SectionLabel>WORD OF MOUTH</SectionLabel>
+        <SectionLabel>{m.settings.section.wordOfMouth}</SectionLabel>
         <Pressable
           onPress={share}
           accessibilityRole="button"
-          accessibilityLabel="Share the Athenaeum"
-          accessibilityHint="Opens the system share sheet"
+          accessibilityLabel={m.settings.share}
+          accessibilityHint={m.settings.shareHint}
           style={[styles.pill, { borderColor: t.palette.sepia }]}
         >
           <Text
@@ -174,11 +209,11 @@ export default function SettingsScreen() {
               letterSpacing: 1.2,
             }}
           >
-            SHARE THE ATHENAEUM
+            {m.settings.share}
           </Text>
         </Pressable>
 
-        <SectionLabel>ABOUT</SectionLabel>
+        <SectionLabel>{m.settings.section.about}</SectionLabel>
         <Text
           style={{
             color: t.palette.sepia,
@@ -186,15 +221,15 @@ export default function SettingsScreen() {
             fontSize: 12,
           }}
         >
-          Version {version}  ·  Expo {runtime}
+          {m.settings.aboutVersion(version, runtime)}
         </Text>
 
         <View style={{ height: 32 }} />
         <Pressable
           onPress={reset}
           accessibilityRole="button"
-          accessibilityLabel="Reset progress"
-          accessibilityHint="Erases every entry, unlock, and purchase on this device"
+          accessibilityLabel={m.settings.resetProgress}
+          accessibilityHint={m.settings.resetHint}
           style={[styles.destructive, { borderColor: t.palette.burgundy }]}
         >
           <Text
@@ -204,7 +239,7 @@ export default function SettingsScreen() {
               letterSpacing: 1,
             }}
           >
-            RESET PROGRESS
+            {m.settings.resetProgress}
           </Text>
         </Pressable>
         <View style={{ flex: 1 }} />

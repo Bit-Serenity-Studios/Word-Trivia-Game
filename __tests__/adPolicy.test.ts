@@ -26,6 +26,7 @@ describe('interstitialCadencePermits', () => {
   const base = {
     minSolvesBetween: 4,
     minMsBetween: 90_000,
+    minMsAfterRewarded: 20_000,
   };
 
   it('permits the first ever call when no interstitial has been shown yet', () => {
@@ -35,6 +36,7 @@ describe('interstitialCadencePermits', () => {
         nowMs: 1_000,
         solvesSinceLastShow: 10,
         lastShownAtMs: null,
+        lastRewardedAtMs: null,
       }),
     ).toBe(true);
   });
@@ -46,6 +48,7 @@ describe('interstitialCadencePermits', () => {
         nowMs: 200_000,
         solvesSinceLastShow: 3,
         lastShownAtMs: 100_000,
+        lastRewardedAtMs: null,
       }),
     ).toBe(false);
   });
@@ -57,6 +60,7 @@ describe('interstitialCadencePermits', () => {
         nowMs: 150_000,
         solvesSinceLastShow: 10,
         lastShownAtMs: 100_000,
+        lastRewardedAtMs: null,
       }),
     ).toBe(false);
   });
@@ -68,18 +72,44 @@ describe('interstitialCadencePermits', () => {
         nowMs: 200_000,
         solvesSinceLastShow: 4,
         lastShownAtMs: 100_000,
+        lastRewardedAtMs: null,
       }),
     ).toBe(true);
   });
 
-  it('behaves as fire-every-solve when both thresholds are zero', () => {
-    const permissive = { minSolvesBetween: 1, minMsBetween: 0 };
+  it('blocks when a rewarded ad just closed', () => {
+    expect(
+      interstitialCadencePermits({
+        ...base,
+        nowMs: 205_000,
+        solvesSinceLastShow: 10,
+        lastShownAtMs: null,
+        lastRewardedAtMs: 200_000,
+      }),
+    ).toBe(false);
+  });
+
+  it('permits again once the post-rewarded quiet window has elapsed', () => {
+    expect(
+      interstitialCadencePermits({
+        ...base,
+        nowMs: 300_000,
+        solvesSinceLastShow: 10,
+        lastShownAtMs: null,
+        lastRewardedAtMs: 200_000,
+      }),
+    ).toBe(true);
+  });
+
+  it('behaves as fire-every-solve when all thresholds are zero', () => {
+    const permissive = { minSolvesBetween: 1, minMsBetween: 0, minMsAfterRewarded: 0 };
     expect(
       interstitialCadencePermits({
         ...permissive,
         nowMs: 500,
         solvesSinceLastShow: 1,
         lastShownAtMs: 400,
+        lastRewardedAtMs: null,
       }),
     ).toBe(true);
   });

@@ -28,6 +28,7 @@ import { useOnboarding } from '@/state/onboardingStore';
 import { useLedger } from '@/state/ledgerStore';
 import { useTelemetry } from '@/components/TelemetryProvider';
 import { useTheme } from '@/theme/ThemeProvider';
+import { useMessages } from '@/i18n/useMessages';
 import { dateKey } from '@/game/daily';
 import type { RoundState } from '@/game/types';
 
@@ -37,6 +38,7 @@ export default function OnboardingScreen() {
   const t = useTheme();
   const router = useRouter();
   const telemetry = useTelemetry();
+  const m = useMessages();
   const markCompleted = useOnboarding((s) => s.markCompleted);
   const hydrated = useOnboarding((s) => s.hydrated);
   const alreadyDone = useOnboarding((s) => s.completedAt);
@@ -132,7 +134,7 @@ export default function OnboardingScreen() {
 
   if (!slidesDone) {
     const slide = ONBOARDING_SLIDES[progress.slideIndex]!;
-    const stepLabel = `${progress.slideIndex + 1} / ${ONBOARDING_SLIDES.length}`;
+    const stepLabel = m.onboarding.stepLabel(progress.slideIndex + 1, ONBOARDING_SLIDES.length);
     const isLast = progress.slideIndex === ONBOARDING_SLIDES.length - 1;
     return (
       <View style={{ flex: 1, backgroundColor: t.palette.ink }}>
@@ -179,7 +181,7 @@ export default function OnboardingScreen() {
             <Pressable
               onPress={() => setProgress(advanceSlide)}
               accessibilityRole="button"
-              accessibilityLabel={isLast ? 'Begin a first entry' : 'Continue'}
+              accessibilityLabel={isLast ? m.onboarding.beginFirstEntry : m.onboarding.continue}
               style={[styles.primary, { borderColor: t.palette.gold }]}
             >
               <Text
@@ -189,7 +191,7 @@ export default function OnboardingScreen() {
                   letterSpacing: 1.4,
                 }}
               >
-                {isLast ? 'BEGIN A FIRST ENTRY' : 'CONTINUE'}
+                {isLast ? m.onboarding.beginFirstEntry : m.onboarding.continue}
               </Text>
             </Pressable>
           </View>
@@ -215,7 +217,7 @@ export default function OnboardingScreen() {
                 letterSpacing: 2.4,
               }}
             >
-              A FIRST ENTRY
+              {m.onboarding.firstEntryHeader}
             </Text>
             <Text
               style={{
@@ -227,7 +229,7 @@ export default function OnboardingScreen() {
                 paddingHorizontal: 20,
               }}
             >
-              Tap a brass tile below to place it in the next open slot.
+              {m.onboarding.firstEntryHint}
             </Text>
           </View>
         }
@@ -235,9 +237,9 @@ export default function OnboardingScreen() {
         onReturn={onReturn}
         primaryActionEnabled={false}
         onPrimaryAction={() => undefined}
-        resolveActionLabel="ENTER THE ATHENAEUM"
+        resolveActionLabel={m.onboarding.enterAthenaeum}
         onResolveAction={finish}
-        sealLabel="INAUGURATION"
+        sealLabel={m.onboarding.inauguration}
       />
     </View>
   );

@@ -5,9 +5,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 interface AdCadenceState {
   solvesSinceLastInterstitial: number;
   lastInterstitialAtMs: number | null;
+  lastRewardedAtMs: number | null;
   hydrated: boolean;
   recordSolve: () => void;
   recordInterstitialShown: (nowMs: number) => void;
+  recordRewardedShown: (nowMs: number) => void;
   reset: () => void;
   markHydrated: () => void;
 }
@@ -19,12 +21,19 @@ export const useAdCadence = create<AdCadenceState>()(
     (set) => ({
       solvesSinceLastInterstitial: 0,
       lastInterstitialAtMs: null,
+      lastRewardedAtMs: null,
       hydrated: false,
       recordSolve: () =>
         set((s) => ({ solvesSinceLastInterstitial: s.solvesSinceLastInterstitial + 1 })),
       recordInterstitialShown: (nowMs) =>
         set({ solvesSinceLastInterstitial: 0, lastInterstitialAtMs: nowMs }),
-      reset: () => set({ solvesSinceLastInterstitial: 0, lastInterstitialAtMs: null }),
+      recordRewardedShown: (nowMs) => set({ lastRewardedAtMs: nowMs }),
+      reset: () =>
+        set({
+          solvesSinceLastInterstitial: 0,
+          lastInterstitialAtMs: null,
+          lastRewardedAtMs: null,
+        }),
       markHydrated: () => set({ hydrated: true }),
     }),
     {
@@ -33,6 +42,7 @@ export const useAdCadence = create<AdCadenceState>()(
       partialize: (s) => ({
         solvesSinceLastInterstitial: s.solvesSinceLastInterstitial,
         lastInterstitialAtMs: s.lastInterstitialAtMs,
+        lastRewardedAtMs: s.lastRewardedAtMs,
       }),
       onRehydrateStorage: () => (state) => {
         state?.markHydrated();

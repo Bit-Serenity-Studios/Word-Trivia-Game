@@ -25,6 +25,7 @@ import {
 import { resolveAdsProvider } from '@/services/providerFactories';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useEntitlements } from '@/state/entitlementsStore';
+import { useAdCadence } from '@/state/adCadenceStore';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTelemetry } from './TelemetryProvider';
 
@@ -81,7 +82,10 @@ export function RewardedAdHost({ children }: { children: React.ReactNode }) {
         placement: cur.placement,
         durationMs: Date.now() - cur.startedAt,
       });
-      if (rewarded) telemetry.track('ad_reward_claimed', { placement: cur.placement });
+      if (rewarded) {
+        telemetry.track('ad_reward_claimed', { placement: cur.placement });
+        useAdCadence.getState().recordRewardedShown(Date.now());
+      }
       cur.resolve({ shown: true, rewarded });
       pendingRef.current = null;
       setPending(null);

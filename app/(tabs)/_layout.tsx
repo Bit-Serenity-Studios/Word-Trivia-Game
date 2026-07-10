@@ -3,6 +3,7 @@ import { Image } from 'react-native';
 import { Tabs } from 'expo-router';
 import { palette, fonts } from '@/theme/tokens';
 import { KenneyIcon, type KenneyIconKind } from '@/components/icons/KenneyIcons';
+import { useMessages } from '@/i18n/useMessages';
 
 const GEAR_ICON = require('@/assets/icons/kenney/gear.png');
 const BASKET_ICON = require('@/assets/icons/kenney/shopping-basket.png');
@@ -35,6 +36,7 @@ const StoreIcon = pngTabIcon(BASKET_ICON);
 const SettingsIcon = pngTabIcon(GEAR_ICON);
 
 export default function TabsLayout() {
+  const m = useMessages();
   return (
     <Tabs
       screenOptions={{
@@ -56,11 +58,11 @@ export default function TabsLayout() {
         tabBarShowLabel: true,
       }}
     >
-      <Tabs.Screen name="play" options={{ title: 'PLAY', tabBarIcon: PlayIcon }} />
-      <Tabs.Screen name="daily" options={{ title: 'NIGHTLY', tabBarIcon: NightlyIcon }} />
-      <Tabs.Screen name="cabinet" options={{ title: 'CABINET', tabBarIcon: CabinetIcon }} />
-      <Tabs.Screen name="store" options={{ title: 'STORE', tabBarIcon: StoreIcon }} />
-      <Tabs.Screen name="settings" options={{ title: 'SETTINGS', tabBarIcon: SettingsIcon }} />
+      <Tabs.Screen name="play" options={{ title: m.tabs.play, tabBarIcon: PlayIcon }} />
+      <Tabs.Screen name="daily" options={{ title: m.tabs.nightly, tabBarIcon: NightlyIcon }} />
+      <Tabs.Screen name="cabinet" options={{ title: m.tabs.cabinet, tabBarIcon: CabinetIcon }} />
+      <Tabs.Screen name="store" options={{ title: m.tabs.store, tabBarIcon: StoreIcon }} />
+      <Tabs.Screen name="settings" options={{ title: m.tabs.settings, tabBarIcon: SettingsIcon }} />
     </Tabs>
   );
 }
