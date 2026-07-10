@@ -38,7 +38,7 @@ export default function SettingsScreen() {
     Alert.alert(m.settings.resetConfirmTitle, m.settings.resetConfirmBody, [
       { text: m.common.cancel, style: 'cancel' },
       {
-        text: 'RESET',
+        text: m.settings.resetConfirmButton,
         style: 'destructive',
         onPress: () => {
           resetLedger();

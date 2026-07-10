@@ -12,6 +12,7 @@ import { useTelemetry } from '@/components/TelemetryProvider';
 import { useHaptics } from '@/hooks/useHaptics';
 import { dateKey } from '@/game/daily';
 import { AdBanner } from '@/components/AdBanner';
+import { useMessages } from '@/i18n/useMessages';
 
 export default function StoreScreen() {
   const t = useTheme();
@@ -19,6 +20,7 @@ export default function StoreScreen() {
   const ads = useRewardedAds();
   const haptics = useHaptics();
   const telemetry = useTelemetry();
+  const m = useMessages();
   const patron = useEntitlements((s) => s.patron);
   useEffect(() => {
     telemetry.track('store_viewed', { patron });
@@ -56,7 +58,7 @@ export default function StoreScreen() {
       <SafeAreaView style={{ flex: 1, zIndex: 10 }} edges={['top']}>
         <ScrollView contentContainerStyle={styles.scroll}>
           <Text style={[styles.title, { color: t.palette.parchment, fontFamily: t.fonts.display }]}>
-            Correspondence
+            {m.store.title}
           </Text>
           <Text
             style={{
@@ -66,29 +68,29 @@ export default function StoreScreen() {
               marginBottom: 16,
             }}
           >
-            Notes from patrons, gifts from the archivist. Balance: {ink} ink · {hintCredits} reveals in hand.
+            {m.store.balance(ink, hintCredits)}
           </Text>
 
-          <SectionTitle>The Archivist</SectionTitle>
+          <SectionTitle>{m.store.section.archivist}</SectionTitle>
           <TileButton
-            title="Archivist’s Gift"
+            title={m.store.archivistTitle}
             body={
               giftClaimed
-                ? `Already collected today. Returns tomorrow (${today}).`
-                : `Attend a single broadcast; receive +${economy.rewardedAd.dailyGiftInk} ink at your desk.`
+                ? m.store.archivistClaimed(today)
+                : m.store.archivistOffer(economy.rewardedAd.dailyGiftInk)
             }
-            actionLabel={giftClaimed ? 'CLAIMED' : 'ATTEND BROADCAST'}
+            actionLabel={giftClaimed ? m.store.archivistClaimedLabel : m.store.archivistAttendLabel}
             disabled={giftClaimed}
             onPress={claimArchivistsGift}
             accent={t.palette.gold}
           />
 
-          <SectionTitle>Patronage</SectionTitle>
+          <SectionTitle>{m.store.section.patronage}</SectionTitle>
           <TileButton
             title={economy.iap.patron.title}
             body={
               patron
-                ? 'You are already a patron. Broadcasts will not reach you again.'
+                ? m.store.patronEnrolled
                 : `${economy.iap.patron.flavor} Includes ${economy.iap.patron.ink} founding ink.`
             }
             actionLabel={patron ? 'ENROLLED' : economy.iap.patron.priceLabel}
@@ -97,7 +99,7 @@ export default function StoreScreen() {
             accent={t.palette.gold}
           />
 
-          <SectionTitle>Marginalia · Hint Bundles</SectionTitle>
+          <SectionTitle>{m.store.section.hintBundles}</SectionTitle>
           <TileButton
             title={economy.iap.hintBundleSmall.title}
             body={economy.iap.hintBundleSmall.flavor}
@@ -113,7 +115,7 @@ export default function StoreScreen() {
             accent={t.palette.parchment}
           />
 
-          <SectionTitle>Vials of Ink</SectionTitle>
+          <SectionTitle>{m.store.section.inkVials}</SectionTitle>
           <TileButton
             title={economy.iap.inkPackSmall.title}
             body={economy.iap.inkPackSmall.flavor}
@@ -139,7 +141,7 @@ export default function StoreScreen() {
               letterSpacing: 0.8,
             }}
           >
-            Answers are never for sale. Only ink, time, and the occasional letter of introduction.
+            {m.store.footer}
           </Text>
         </ScrollView>
         <AdBanner slot="store-bottom" />

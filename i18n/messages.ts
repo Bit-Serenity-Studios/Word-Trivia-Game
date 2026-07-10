@@ -50,6 +50,7 @@ export interface Messages {
     resetHint: string;
     resetConfirmTitle: string;
     resetConfirmBody: string;
+    resetConfirmButton: string;
   };
   onboarding: {
     stepLabel: (index: number, total: number) => string;
@@ -176,5 +177,11 @@ export interface Messages {
     stubBody: string;
     stubDone: string;
     stubDoneBody: string;
+  };
+  error: {
+    heading: string;
+    body: string;
+    detailLabel: string;
+    reload: string;
   };
 }

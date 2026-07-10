@@ -25,6 +25,7 @@ import { IapHost } from '@/components/IapHost';
 import { InterstitialHost } from '@/components/InterstitialHost';
 import { TelemetryProvider } from '@/components/TelemetryProvider';
 import { MusicHost } from '@/components/MusicHost';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useLocale } from '@/state/localeStore';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -86,6 +87,7 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: palette.ink }}>
       <SafeAreaProvider>
+        <ErrorBoundary>
         <ThemeProvider>
           <TelemetryProvider>
             <MusicHost>
@@ -106,6 +108,7 @@ export default function RootLayout() {
             </MusicHost>
           </TelemetryProvider>
         </ThemeProvider>
+        </ErrorBoundary>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -30,6 +30,7 @@ import { useTelemetry } from '@/components/TelemetryProvider';
 import { useSfx } from '@/components/MusicHost';
 import { useInterstitial } from '@/components/InterstitialHost';
 import { useAdCadence } from '@/state/adCadenceStore';
+import { useMessages } from '@/i18n/useMessages';
 
 export default function VolumePlayScreen() {
   const t = useTheme();
@@ -74,6 +75,7 @@ export default function VolumePlayScreen() {
   const sfx = useSfx();
   const interstitial = useInterstitial();
   const recordSolveForCadence = useAdCadence((s) => s.recordSolve);
+  const m = useMessages();
 
   const applyRankProgress = useVolumes((s) => s.applyRankProgress);
   const celebrateRankId = useVolumes((s) => s.celebrateRankId);
@@ -329,7 +331,7 @@ export default function VolumePlayScreen() {
         </Text>
         <Pressable onPress={() => router.back()} style={styles.backPill}>
           <Text style={{ color: t.palette.gold, fontFamily: t.fonts.displayItalic, letterSpacing: 1.2 }}>
-            BACK TO THE SHELF
+            {m.play.theShelfBack}
           </Text>
         </Pressable>
       </View>
@@ -374,7 +376,7 @@ export default function VolumePlayScreen() {
                   letterSpacing: 1.4,
                 }}
               >
-                THE SHELF
+                {m.play.theShelfBack}
               </Text>
             </Pressable>
             <Ledger ink={ink} streak={streak} entries={entries} />
@@ -387,7 +389,7 @@ export default function VolumePlayScreen() {
                 marginTop: 6,
               }}
             >
-              {isRare ? 'SEALED · ' : ''}{volume.title.toUpperCase()}
+              {isRare ? m.play.sealedPrefix : ''}{volume.title.toUpperCase()}
             </Text>
             {progress ? (
               <Text
@@ -398,8 +400,8 @@ export default function VolumePlayScreen() {
                   marginTop: 2,
                 }}
               >
-                {progress.solved} / {progress.size}
-                {isRare ? '  ·  3× reward' : ''}
+                {m.play.volumeProgress(progress.solved, progress.size)}
+                {isRare ? `  ·  ${m.play.sealedBonus}` : ''}
               </Text>
             ) : null}
           </View>
@@ -564,6 +566,7 @@ function RankUpOverlay({
   onDismiss: () => void;
 }) {
   const t = useTheme();
+  const m = useMessages();
   const reward = patron ? Math.round(rank.inkReward * (1 + economy.ranks.patronBonus)) : rank.inkReward;
   return (
     <View style={styles.overlayScrim}>
@@ -583,7 +586,7 @@ function RankUpOverlay({
               textAlign: 'center',
             }}
           >
-            RANK · ADVANCED
+            {m.ranks.advancedHeader}
           </Text>
           <View style={{ marginTop: 14 }}>
             <BookPlate rank={rank} />
@@ -609,7 +612,7 @@ function RankUpOverlay({
               marginTop: 14,
             }}
           >
-            +{reward} ink
+            {m.ranks.inkGained(reward)}
           </Text>
           <Pressable onPress={onDismiss} style={[styles.overlayBtn, { borderColor: t.palette.gold }]}>
             <Text
@@ -619,7 +622,7 @@ function RankUpOverlay({
                 letterSpacing: 1.2,
               }}
             >
-              CONTINUE READING
+              {m.ranks.continueReading}
             </Text>
           </Pressable>
         </View>

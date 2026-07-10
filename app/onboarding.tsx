@@ -29,6 +29,7 @@ import { useLedger } from '@/state/ledgerStore';
 import { useTelemetry } from '@/components/TelemetryProvider';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useMessages } from '@/i18n/useMessages';
+import { CoachedArrow } from '@/components/CoachedArrow';
 import { dateKey } from '@/game/daily';
 import type { RoundState } from '@/game/types';
 
@@ -231,6 +232,7 @@ export default function OnboardingScreen() {
             >
               {m.onboarding.firstEntryHint}
             </Text>
+            <CoachedArrow visible={round !== null && round.slots.every((s) => s.tileId === null)} />
           </View>
         }
         onPlace={onPlace}

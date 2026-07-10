@@ -55,6 +55,7 @@ export const en: Messages = {
     resetConfirmTitle: 'Reset the register?',
     resetConfirmBody:
       'This erases every entry, every unlocked volume, every earned rank, and every purchase on this device. It cannot be undone.',
+    resetConfirmButton: 'RESET',
   },
   onboarding: {
     stepLabel: (index, total) => `${index} / ${total}`,
@@ -187,5 +188,11 @@ export const en: Messages = {
     stubBody: 'The archives keep the candles lit with an occasional word from a patron.',
     stubDone: 'The announcement has ended.',
     stubDoneBody: 'Return to the archives.',
+  },
+  error: {
+    heading: 'A candle has gone out.',
+    body: 'The archives have hit an unexpected page. Your progress is safe on this device. Try again — the desk should light back up.',
+    detailLabel: 'THE DETAILS',
+    reload: 'RELIGHT THE CANDLE',
   },
 };
