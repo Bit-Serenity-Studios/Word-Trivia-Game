@@ -105,9 +105,14 @@ export default function SettingsScreen() {
           onToggle={() => settings.setHaptics(!settings.hapticsEnabled)}
         />
         <Row
-          label="Ambience"
-          value={settings.soundEnabled}
-          onToggle={() => settings.setSound(!settings.soundEnabled)}
+          label="Sound effects"
+          value={settings.sfxEnabled}
+          onToggle={() => settings.setSfx(!settings.sfxEnabled)}
+        />
+        <Row
+          label="Music"
+          value={settings.musicEnabled}
+          onToggle={() => settings.setMusic(!settings.musicEnabled)}
         />
 
         <SectionLabel>PATRONAGE</SectionLabel>

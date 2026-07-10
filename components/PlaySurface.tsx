@@ -24,6 +24,7 @@ export interface PlaySurfaceProps {
   onSecondaryAction?: () => void;
   secondaryActionEnabled?: boolean;
   resolveActionLabel?: string;
+  resolveActionTrailingIcon?: React.ReactNode;
   onResolveAction?: () => void;
   resolveExtra?: React.ReactNode;
   onPlace: (tileId: string) => void;
@@ -148,6 +149,8 @@ export function PlaySurface(props: PlaySurfaceProps) {
                 paddingHorizontal: 20,
                 paddingVertical: 12,
                 borderRadius: t.radii.pill,
+                flexDirection: 'row',
+                alignItems: 'center',
               }}
             >
               <Text
@@ -160,6 +163,9 @@ export function PlaySurface(props: PlaySurfaceProps) {
               >
                 {props.resolveActionLabel}
               </Text>
+              {props.resolveActionTrailingIcon ? (
+                <View style={{ marginLeft: 8 }}>{props.resolveActionTrailingIcon}</View>
+              ) : null}
             </Pressable>
           ) : null}
         </View>

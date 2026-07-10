@@ -23,6 +23,7 @@ import { palette } from '@/theme/tokens';
 import { RewardedAdHost } from '@/components/RewardedAdProvider';
 import { IapHost } from '@/components/IapHost';
 import { TelemetryProvider } from '@/components/TelemetryProvider';
+import { MusicHost } from '@/components/MusicHost';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -56,18 +57,20 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider>
           <TelemetryProvider>
-            <IapHost>
-              <RewardedAdHost>
-                <StatusBar style="light" />
-                <Stack
-                  screenOptions={{
-                    headerShown: false,
-                    contentStyle: { backgroundColor: palette.ink },
-                    animation: 'fade',
-                  }}
-                />
-              </RewardedAdHost>
-            </IapHost>
+            <MusicHost>
+              <IapHost>
+                <RewardedAdHost>
+                  <StatusBar style="light" />
+                  <Stack
+                    screenOptions={{
+                      headerShown: false,
+                      contentStyle: { backgroundColor: palette.ink },
+                      animation: 'fade',
+                    }}
+                  />
+                </RewardedAdHost>
+              </IapHost>
+            </MusicHost>
           </TelemetryProvider>
         </ThemeProvider>
       </SafeAreaProvider>

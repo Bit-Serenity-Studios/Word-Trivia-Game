@@ -7,6 +7,7 @@ import { Ledger } from '@/components/Ledger';
 import { BookPlate } from '@/components/BookPlate';
 import { CuratorLetter } from '@/components/CuratorLetter';
 import { VolumeCompletion } from '@/components/VolumeCompletion';
+import { KenneyIcon } from '@/components/icons/KenneyIcons';
 import { useGame } from '@/state/gameStore';
 import { useLedger } from '@/state/ledgerStore';
 import { useEntitlements } from '@/state/entitlementsStore';
@@ -26,6 +27,7 @@ import { useTheme } from '@/theme/ThemeProvider';
 import { useHaptics } from '@/hooks/useHaptics';
 import { useAnnouncements, ANNOUNCEMENTS } from '@/hooks/useAnnouncements';
 import { useTelemetry } from '@/components/TelemetryProvider';
+import { useSfx } from '@/components/MusicHost';
 
 export default function VolumePlayScreen() {
   const t = useTheme();
@@ -67,6 +69,7 @@ export default function VolumePlayScreen() {
   const bestNightly = useDaily((s) => s.bestStreak);
   const telemetry = useTelemetry();
   const { announce } = useAnnouncements();
+  const sfx = useSfx();
 
   const applyRankProgress = useVolumes((s) => s.applyRankProgress);
   const celebrateRankId = useVolumes((s) => s.celebrateRankId);
@@ -93,9 +96,20 @@ export default function VolumePlayScreen() {
     if (roundId !== roundKeyRef.current) {
       roundKeyRef.current = roundId;
       setRescueDismissed(null);
-      if (isRare) announce(ANNOUNCEMENTS.sealedSpawn());
+      if (isRare) {
+        announce(ANNOUNCEMENTS.sealedSpawn());
+        void sfx.play('wax-seal');
+      }
     }
-  }, [roundId, isRare, announce]);
+  }, [roundId, isRare, announce, sfx]);
+
+  const wrongFlashRef = useRef(0);
+  useEffect(() => {
+    if (wrongFlash > wrongFlashRef.current) {
+      wrongFlashRef.current = wrongFlash;
+      void sfx.play('tile-wrong');
+    }
+  }, [wrongFlash, sfx]);
 
   const rescueAnnouncedRef = useRef<string | null>(null);
   useEffect(() => {
@@ -112,11 +126,13 @@ export default function VolumePlayScreen() {
     if (mode !== 'volume' || activeVolume !== volume.id || !round) {
       startNext({ volumeId: volume.id });
       telemetry.track('volume_opened', { volume: volume.id });
+      void sfx.play('volume-open');
       if (!hasBeenOpened(volume.id) && !letterDeferredRef.current) {
         setLetterVisible(true);
+        void sfx.play('page-turn');
       }
     }
-  }, [hydrated, volumesHydrated, volume, mode, activeVolume, round, startNext, telemetry, hasBeenOpened]);
+  }, [hydrated, volumesHydrated, volume, mode, activeVolume, round, startNext, telemetry, hasBeenOpened, sfx]);
 
   useEffect(() => {
     if (volume) setActiveVolume(volume.id);
@@ -142,6 +158,7 @@ export default function VolumePlayScreen() {
       ink: lastReward ?? 0,
     });
     announce(ANNOUNCEMENTS.entrySolved(lastReward ?? 0));
+    void sfx.play('wax-seal');
     if (roundIsRare) {
       telemetry.track('sealed_solved', {
         questionId: resolvedRoundKey,
@@ -178,6 +195,7 @@ export default function VolumePlayScreen() {
           patron,
         });
         announce(ANNOUNCEMENTS.volumeCompleted(volume.title));
+        void sfx.play('volume-complete');
       }
     }
   }, [
@@ -201,6 +219,7 @@ export default function VolumePlayScreen() {
     markCompleted,
     showCompletionCeremony,
     announce,
+    sfx,
   ]);
 
   const wrongAttempts = round?.wrongAttempts ?? 0;
@@ -246,6 +265,14 @@ export default function VolumePlayScreen() {
       haptics.success();
     }
   }, [ads, roundId, lastReward, doubledRound, awardBonusInk, haptics]);
+
+  const onPlaceWithSfx = useCallback(
+    (tileId: string) => {
+      void sfx.play('tile-place');
+      place(tileId);
+    },
+    [sfx, place],
+  );
 
   const onAdvance = useCallback(() => {
     if (volume) startNext({ volumeId: volume.id });
@@ -317,7 +344,20 @@ export default function VolumePlayScreen() {
         lastReward={lastReward}
         header={
           <View style={{ alignItems: 'center' }}>
-            <Pressable onPress={onBack} style={{ alignSelf: 'flex-start', marginLeft: 8 }}>
+            <Pressable
+              onPress={onBack}
+              accessibilityRole="button"
+              accessibilityLabel="Back to the shelf"
+              style={{
+                alignSelf: 'flex-start',
+                marginLeft: 8,
+                flexDirection: 'row',
+                alignItems: 'center',
+              }}
+            >
+              <View style={{ transform: [{ scaleX: -1 }], marginRight: 6 }}>
+                <KenneyIcon kind="arrowRight" color={t.palette.sepia} size={16} />
+              </View>
               <Text
                 style={{
                   color: t.palette.sepia,
@@ -326,7 +366,7 @@ export default function VolumePlayScreen() {
                   letterSpacing: 1.4,
                 }}
               >
-                ← THE SHELF
+                THE SHELF
               </Text>
             </Pressable>
             <Ledger ink={ink} streak={streak} entries={entries} />
@@ -365,9 +405,10 @@ export default function VolumePlayScreen() {
           breakStreak();
           onAdvance();
         }}
-        onPlace={place}
+        onPlace={onPlaceWithSfx}
         onReturn={returnFromSlot}
-        resolveActionLabel="NEXT ENTRY →"
+        resolveActionLabel="NEXT ENTRY"
+        resolveActionTrailingIcon={<KenneyIcon kind="arrowRight" color={t.palette.gold} size={16} />}
         onResolveAction={onAdvance}
         sealLabel={isRare ? 'SEALED VOLUME' : undefined}
         resolveExtra={

@@ -6,12 +6,14 @@ import { StorageKeys } from './storage';
 export interface SettingsState {
   reducedMotion: boolean;
   hapticsEnabled: boolean;
-  soundEnabled: boolean;
+  musicEnabled: boolean;
+  sfxEnabled: boolean;
   highContrast: boolean;
   textBoost: boolean;
   setReducedMotion: (v: boolean) => void;
   setHaptics: (v: boolean) => void;
-  setSound: (v: boolean) => void;
+  setMusic: (v: boolean) => void;
+  setSfx: (v: boolean) => void;
   setHighContrast: (v: boolean) => void;
   setTextBoost: (v: boolean) => void;
 }
@@ -21,18 +23,21 @@ export const useSettings = create<SettingsState>()(
     (set) => ({
       reducedMotion: false,
       hapticsEnabled: true,
-      soundEnabled: false,
+      musicEnabled: false,
+      sfxEnabled: true,
       highContrast: false,
       textBoost: false,
       setReducedMotion: (v) => set({ reducedMotion: v }),
       setHaptics: (v) => set({ hapticsEnabled: v }),
-      setSound: (v) => set({ soundEnabled: v }),
+      setMusic: (v) => set({ musicEnabled: v }),
+      setSfx: (v) => set({ sfxEnabled: v }),
       setHighContrast: (v) => set({ highContrast: v }),
       setTextBoost: (v) => set({ textBoost: v }),
     }),
     {
       name: StorageKeys.settings,
       storage: createJSONStorage(() => AsyncStorage),
+      version: 2,
     },
   ),
 );
