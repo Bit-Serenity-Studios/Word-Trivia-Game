@@ -3,17 +3,29 @@ import type { IapProvider } from './iap';
 import type { Telemetry } from './analytics';
 import { NullTelemetry, createConsoleTelemetry } from './analytics';
 import { createPostHogTelemetry, type PostHogClient } from './analyticsPostHog';
-import { createAdmobRewardedProvider, type AdmobSDK, type AdmobConfig } from './adsAdmob';
+import {
+  createAdmobRewardedProvider,
+  createAdmobInterstitialProvider,
+  type AdmobSDK,
+  type AdmobConfig,
+  type AdmobInterstitialConfig,
+} from './adsAdmob';
 import {
   createRevenueCatProvider,
   type RevenueCatSDK,
   type RevenueCatConfig,
 } from './iapRevenueCat';
+import type { InterstitialProvider, InterstitialPlacement } from './interstitialAds';
+import { NullInterstitialProvider } from './interstitialAds';
+import type { BannerProvider } from './bannerAds';
+import { NullBannerProvider } from './bannerAds';
 import { economy } from '@/game/economy';
 
 export interface RealProviders {
   telemetry?: Telemetry | null;
   ads?: RewardedAdProvider | null;
+  interstitial?: InterstitialProvider | null;
+  banner?: BannerProvider | null;
   iap?: IapProvider | null;
 }
 
@@ -36,9 +48,19 @@ export function resolveAdsProvider(fallback: RewardedAdProvider): RewardedAdProv
   return registered.ads ?? fallback;
 }
 
+export function resolveInterstitialProvider(fallback: InterstitialProvider): InterstitialProvider {
+  return registered.interstitial ?? fallback;
+}
+
+export function resolveBannerProvider(fallback: BannerProvider): BannerProvider {
+  return registered.banner ?? fallback;
+}
+
 export function resolveIapProvider(fallback: IapProvider): IapProvider {
   return registered.iap ?? fallback;
 }
+
+export { NullInterstitialProvider, NullBannerProvider };
 
 export function defaultTelemetryForDev(): Telemetry {
   if (typeof __DEV__ !== 'undefined' && __DEV__) return createConsoleTelemetry();
@@ -74,6 +96,32 @@ export function buildRealAdsProvider(options: BuildRealAdsOptions): RewardedAdPr
     loadTimeoutMs: options.loadTimeoutMs,
   };
   return createAdmobRewardedProvider(options.sdk, config);
+}
+
+export interface BuildRealInterstitialOptions {
+  sdk: AdmobSDK;
+  useTestIds: boolean;
+  unitFor?(placement: InterstitialPlacement): string;
+  loadTimeoutMs?: number;
+}
+
+export function buildRealInterstitialProvider(
+  options: BuildRealInterstitialOptions,
+): InterstitialProvider {
+  const config: AdmobInterstitialConfig = {
+    useTestIds: options.useTestIds,
+    unitFor:
+      options.unitFor ??
+      ((placement) => {
+        const testId = options.sdk.TestIds.INTERSTITIAL;
+        if (options.useTestIds && testId) return testId;
+        throw new Error(
+          `buildRealInterstitialProvider: no unit id configured for placement "${placement}"`,
+        );
+      }),
+    loadTimeoutMs: options.loadTimeoutMs,
+  };
+  return createAdmobInterstitialProvider(options.sdk, config);
 }
 
 export interface BuildRealIapOptions {

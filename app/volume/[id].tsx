@@ -28,6 +28,8 @@ import { useHaptics } from '@/hooks/useHaptics';
 import { useAnnouncements, ANNOUNCEMENTS } from '@/hooks/useAnnouncements';
 import { useTelemetry } from '@/components/TelemetryProvider';
 import { useSfx } from '@/components/MusicHost';
+import { useInterstitial } from '@/components/InterstitialHost';
+import { useAdCadence } from '@/state/adCadenceStore';
 
 export default function VolumePlayScreen() {
   const t = useTheme();
@@ -70,6 +72,8 @@ export default function VolumePlayScreen() {
   const telemetry = useTelemetry();
   const { announce } = useAnnouncements();
   const sfx = useSfx();
+  const interstitial = useInterstitial();
+  const recordSolveForCadence = useAdCadence((s) => s.recordSolve);
 
   const applyRankProgress = useVolumes((s) => s.applyRankProgress);
   const celebrateRankId = useVolumes((s) => s.celebrateRankId);
@@ -159,6 +163,8 @@ export default function VolumePlayScreen() {
     });
     announce(ANNOUNCEMENTS.entrySolved(lastReward ?? 0));
     void sfx.play('wax-seal');
+    recordSolveForCadence();
+    void interstitial.offer('post-solve');
     if (roundIsRare) {
       telemetry.track('sealed_solved', {
         questionId: resolvedRoundKey,
@@ -220,6 +226,8 @@ export default function VolumePlayScreen() {
     showCompletionCeremony,
     announce,
     sfx,
+    interstitial,
+    recordSolveForCadence,
   ]);
 
   const wrongAttempts = round?.wrongAttempts ?? 0;

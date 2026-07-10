@@ -11,6 +11,7 @@ import { useRewardedAds } from '@/components/RewardedAdProvider';
 import { useTelemetry } from '@/components/TelemetryProvider';
 import { useHaptics } from '@/hooks/useHaptics';
 import { dateKey } from '@/game/daily';
+import { AdBanner } from '@/components/AdBanner';
 
 export default function StoreScreen() {
   const t = useTheme();
@@ -141,6 +142,7 @@ export default function StoreScreen() {
             Answers are never for sale. Only ink, time, and the occasional letter of introduction.
           </Text>
         </ScrollView>
+        <AdBanner slot="store-bottom" />
       </SafeAreaView>
     </View>
   );

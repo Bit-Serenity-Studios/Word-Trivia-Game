@@ -55,9 +55,14 @@ EXPO_PUBLIC_POSTHOG_HOST=https://us.i.posthog.com
 # AdMob
 EXPO_PUBLIC_USE_REAL_ADS=1
 EXPO_PUBLIC_ADMOB_USE_TEST_IDS=1        # set to 0 for production
+# Rewarded (opt-in with reward — never suppressed by patron since they carry a benefit)
 EXPO_PUBLIC_ADMOB_UNIT_POST_SOLVE=ca-app-pub-.../....
 EXPO_PUBLIC_ADMOB_UNIT_FAILURE_RESCUE=ca-app-pub-.../....
 EXPO_PUBLIC_ADMOB_UNIT_ARCHIVIST=ca-app-pub-.../....
+# Interstitial (forced post-solve — suppressed by patron)
+EXPO_PUBLIC_ADMOB_UNIT_INTERSTITIAL=ca-app-pub-.../....
+# Banner (persistent on Cabinet/Store/Settings — suppressed by patron)
+EXPO_PUBLIC_ADMOB_UNIT_BANNER=ca-app-pub-.../....
 
 # RevenueCat
 EXPO_PUBLIC_USE_REAL_IAP=1
@@ -89,9 +94,12 @@ import { Platform } from 'react-native';
 import PostHog from 'posthog-react-native';
 import mobileAds, {
   RewardedAd,
+  InterstitialAd,
   RewardedAdEventType,
   AdEventType,
   TestIds,
+  BannerAd,
+  BannerAdSize,
 } from 'react-native-google-mobile-ads';
 import Purchases from 'react-native-purchases';
 
@@ -99,10 +107,13 @@ import {
   registerRealProviders,
   buildRealTelemetry,
   buildRealAdsProvider,
+  buildRealInterstitialProvider,
   buildRealIapProvider,
 } from '@/services/providerFactories';
 import { useTelemetryId } from '@/state/telemetryIdStore';
 import type { RewardedPlacement } from '@/services/ads';
+import type { InterstitialPlacement } from '@/services/interstitialAds';
+import type { BannerProvider, BannerSlot } from '@/services/bannerAds';
 
 const posthogKey = process.env.EXPO_PUBLIC_POSTHOG_KEY;
 const posthogHost = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
@@ -116,6 +127,13 @@ const admobUnits: Record<RewardedPlacement, string | undefined> = {
   'archivist-gift': process.env.EXPO_PUBLIC_ADMOB_UNIT_ARCHIVIST,
 };
 
+const interstitialUnits: Record<InterstitialPlacement, string | undefined> = {
+  'post-solve': process.env.EXPO_PUBLIC_ADMOB_UNIT_INTERSTITIAL,
+  'post-nightly': process.env.EXPO_PUBLIC_ADMOB_UNIT_INTERSTITIAL,
+};
+
+const bannerUnitId = process.env.EXPO_PUBLIC_ADMOB_UNIT_BANNER;
+
 export async function bootstrapProviders(): Promise<void> {
   if (posthogKey) {
     const distinctId = useTelemetryId.getState().ensureId();
@@ -127,9 +145,10 @@ export async function bootstrapProviders(): Promise<void> {
 
   if (useRealAds) {
     await mobileAds().initialize();
+    const admobSdk = { RewardedAd, InterstitialAd, RewardedAdEventType, AdEventType, TestIds };
     registerRealProviders({
       ads: buildRealAdsProvider({
-        sdk: { RewardedAd, RewardedAdEventType, AdEventType, TestIds },
+        sdk: admobSdk,
         useTestIds: useTestAdIds,
         unitFor: (placement) => {
           const id = admobUnits[placement];
@@ -137,6 +156,28 @@ export async function bootstrapProviders(): Promise<void> {
           return id;
         },
       }),
+      interstitial: buildRealInterstitialProvider({
+        sdk: admobSdk,
+        useTestIds: useTestAdIds,
+        unitFor: (placement) => {
+          const id = interstitialUnits[placement];
+          if (!id) throw new Error(`no AdMob interstitial unit configured for ${placement}`);
+          return id;
+        },
+      }),
+      banner: {
+        // The banner provider is a render function; wire the react-native-google-mobile-ads
+        // BannerAd component with the configured unit id and size (BANNER for 320x50).
+        render: ({ slot, size }: { slot: BannerSlot; size: string }) => {
+          if (!bannerUnitId) return null;
+          return (
+            <BannerAd
+              unitId={bannerUnitId}
+              size={BannerAdSize.BANNER}
+            />
+          );
+        },
+      } satisfies BannerProvider,
     });
   }
 

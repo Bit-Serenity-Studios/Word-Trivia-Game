@@ -22,6 +22,7 @@ import { ThemeProvider } from '@/theme/ThemeProvider';
 import { palette } from '@/theme/tokens';
 import { RewardedAdHost } from '@/components/RewardedAdProvider';
 import { IapHost } from '@/components/IapHost';
+import { InterstitialHost } from '@/components/InterstitialHost';
 import { TelemetryProvider } from '@/components/TelemetryProvider';
 import { MusicHost } from '@/components/MusicHost';
 
@@ -60,14 +61,16 @@ export default function RootLayout() {
             <MusicHost>
               <IapHost>
                 <RewardedAdHost>
-                  <StatusBar style="light" />
-                  <Stack
-                    screenOptions={{
-                      headerShown: false,
-                      contentStyle: { backgroundColor: palette.ink },
-                      animation: 'fade',
-                    }}
-                  />
+                  <InterstitialHost>
+                    <StatusBar style="light" />
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: palette.ink },
+                        animation: 'fade',
+                      }}
+                    />
+                  </InterstitialHost>
                 </RewardedAdHost>
               </IapHost>
             </MusicHost>

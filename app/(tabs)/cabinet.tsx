@@ -5,6 +5,7 @@ import { CandleGlow } from '@/components/CandleGlow';
 import { ArtifactCard } from '@/components/ArtifactCard';
 import { FamiliarPanel } from '@/components/FamiliarPanel';
 import { EmptyState } from '@/components/EmptyState';
+import { AdBanner } from '@/components/AdBanner';
 import { useTheme } from '@/theme/ThemeProvider';
 import { useLedger } from '@/state/ledgerStore';
 import { ARTIFACTS, isUnlocked, nextArtifact, unlockedCount, newlyUnlocked } from '@/game/cabinet';
@@ -78,6 +79,7 @@ export default function CabinetScreen() {
             ))}
           </View>
         </ScrollView>
+        <AdBanner slot="cabinet-bottom" />
       </SafeAreaView>
     </View>
   );

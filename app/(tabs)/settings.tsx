@@ -10,6 +10,7 @@ import { useEntitlements } from '@/state/entitlementsStore';
 import { useOnboarding } from '@/state/onboardingStore';
 import { useIap } from '@/components/IapHost';
 import { useTelemetry } from '@/components/TelemetryProvider';
+import { AdBanner } from '@/components/AdBanner';
 
 export default function SettingsScreen() {
   const t = useTheme();
@@ -206,6 +207,8 @@ export default function SettingsScreen() {
             RESET PROGRESS
           </Text>
         </Pressable>
+        <View style={{ flex: 1 }} />
+        <AdBanner slot="settings-bottom" />
       </SafeAreaView>
     </View>
   );
