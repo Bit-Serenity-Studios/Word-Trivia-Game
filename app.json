@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "The Athenaeum",
+    "slug": "the-athenaeum",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "athenaeum",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#171310",
+    "primaryColor": "#C9A227",
+    "description": "A candle-lit trivia game for Dark Academia readers.",
+    "githubUrl": "https://github.com/bit-serenity-studios/word-trivia-game",
+    "splash": {
+      "backgroundColor": "#171310",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.athenaeum.app",
+      "buildNumber": "1",
+      "requireFullScreen": true,
+      "userInterfaceStyle": "dark",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIViewControllerBasedStatusBarAppearance": true
+      }
+    },
+    "android": {
+      "package": "com.athenaeum.app",
+      "versionCode": 1,
+      "userInterfaceStyle": "dark",
+      "backgroundColor": "#171310",
+      "adaptiveIcon": {
+        "backgroundColor": "#171310"
+      },
+      "permissions": [
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
+        "VIBRATE"
+      ],
+      "blockedPermissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "READ_CONTACTS",
+        "RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "backgroundColor": "#171310"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "color": "#C9A227"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
