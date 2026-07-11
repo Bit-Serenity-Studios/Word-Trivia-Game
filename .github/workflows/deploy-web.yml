@@ -60,6 +60,11 @@ jobs:
 
   deploy:
     needs: build
+    # GitHub Pages environments only accept the default branch by default,
+    # so non-main pushes (feature branches, PR builds) would fail the deploy
+    # job even when the build succeeded. Gate deploy on main/master; other
+    # branches still get the full build verification above.
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
