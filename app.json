@@ -14,6 +14,9 @@
       "backgroundColor": "#171310",
       "resizeMode": "contain"
     },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.athenaeum.app",
@@ -22,7 +25,8 @@
       "userInterfaceStyle": "dark",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIViewControllerBasedStatusBarAppearance": true
+        "UIViewControllerBasedStatusBarAppearance": true,
+        "SKAdNetworkItems": []
       }
     },
     "android": {
@@ -52,15 +56,29 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      "expo-dev-client",
       [
         "expo-notifications",
         {
           "color": "#C9A227"
         }
+      ],
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "userTrackingUsageDescription": "This identifier will be used to deliver personalised ads to you."
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
     }
   }
 }
