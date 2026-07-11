@@ -28,6 +28,7 @@ import { TelemetryProvider } from '@/components/TelemetryProvider';
 import { MusicHost } from '@/components/MusicHost';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { useLocale } from '@/state/localeStore';
+import { bootstrapProviders } from '@/services/registerProviders';
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -60,6 +61,13 @@ export default function RootLayout() {
   });
 
   const ready = cormorantLoaded && garamondLoaded;
+
+  const bootstrapAppliedRef = React.useRef(false);
+  useEffect(() => {
+    if (bootstrapAppliedRef.current) return;
+    bootstrapAppliedRef.current = true;
+    void bootstrapProviders();
+  }, []);
 
   const localeHydrated = useLocale((s) => s.hydrated);
   const localePersisted = useLocale((s) => s.locale);
