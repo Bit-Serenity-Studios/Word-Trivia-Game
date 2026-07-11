@@ -10,6 +10,13 @@
 
 const isWebExport = process.env.EXPO_TARGET === 'web';
 
+// GitHub Pages serves this repo under /Word-Trivia-Game/, not the domain
+// root. Expo bakes absolute asset paths into the exported index.html at
+// build time, so without baseUrl the bundle 404s and the page renders
+// blank white. EXPO_WEB_BASE_URL overrides it for local `expo start --web`
+// runs (which do want '/').
+const webBaseUrl = process.env.EXPO_WEB_BASE_URL ?? '/Word-Trivia-Game';
+
 const basePlugins = [
   'expo-router',
   'expo-font',
@@ -88,6 +95,7 @@ module.exports = {
     plugins,
     experiments: {
       typedRoutes: true,
+      ...(isWebExport ? { baseUrl: webBaseUrl } : {}),
     },
     extra: {
       eas: {
