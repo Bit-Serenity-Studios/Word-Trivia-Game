@@ -49,11 +49,11 @@ export function rollReward(rng: RNG): HoardReward {
 export function hoardFlavor(tier: HoardTier): string {
   switch (tier) {
     case 'rare':
-      return 'A hoard of rare fragments — the owl looks quietly pleased.';
+      return 'A hoard of rare fragments. The owl looks quietly pleased.';
     case 'rich':
       return 'A generous hoard, gathered from the deeper stacks.';
     case 'common':
-      return 'A modest hoard — a few pressed leaves and coins of ink.';
+      return 'A modest hoard: a few pressed leaves and coins of ink.';
   }
 }
 

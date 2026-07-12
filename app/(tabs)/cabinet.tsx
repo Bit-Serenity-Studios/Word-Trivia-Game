@@ -68,7 +68,7 @@ export default function CabinetScreen() {
           {unlocked === 0 ? (
             <EmptyState
               heading="The shelf is bare."
-              body="Every entry you catalogue leaves something behind — a pressed frond, a beeswax taper, an astrolabe. The first arrives at three entries."
+              body="Every entry you catalogue leaves something behind: a pressed frond, a beeswax taper, an astrolabe. The first arrives at three entries."
               glyph="candle"
             />
           ) : null}

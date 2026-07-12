@@ -48,7 +48,7 @@ export const en: Messages = {
     share: 'SHARE THE ATHENAEUM',
     shareHint: 'Opens the system share sheet',
     shareMessage:
-      'The Athenaeum — a candle-lit trivia game for Dark Academia readers. Come catalogue the world one word at a time.',
+      'The Athenaeum, a candle-lit trivia game for Dark Academia readers. Come catalogue the world one word at a time.',
     aboutVersion: (version, runtime) => `Version ${version}  ·  Expo ${runtime}`,
     resetProgress: 'RESET PROGRESS',
     resetHint: 'Erases every entry, unlock, and purchase on this device',
@@ -94,8 +94,8 @@ export const en: Messages = {
   volume: {
     readerBookplate: 'READER’S BOOKPLATE',
     theReadingList: 'THE READING LIST',
-    nextRankLabel: (rankTitle) => `Next rank — ${rankTitle}:`,
-    nextRankMet: 'requirements met — solve one more entry to promote.',
+    nextRankLabel: (rankTitle) => `Next rank, ${rankTitle}:`,
+    nextRankMet: 'requirements met. Solve one more entry to promote.',
     nextRankFinal: 'The founding hand has written your name at the top of the register.',
     entriesShort: (solved, total) => `${solved} / ${total} entries`,
     catalogued: '· catalogued',
@@ -149,7 +149,7 @@ export const en: Messages = {
     shelfComplete: 'The shelf is complete.',
     emptyHeading: 'The shelf is bare.',
     emptyBody:
-      'Every entry you catalogue leaves something behind — a pressed frond, a beeswax taper, an astrolabe. The first arrives at three entries.',
+      'Every entry you catalogue leaves something behind: a pressed frond, a beeswax taper, an astrolabe. The first arrives at three entries.',
     sealed: '— sealed —',
     sealedAt: (entries) => `Unlocked after ${entries} entries.`,
   },
@@ -191,7 +191,7 @@ export const en: Messages = {
   },
   error: {
     heading: 'A candle has gone out.',
-    body: 'The archives have hit an unexpected page. Your progress is safe on this device. Try again — the desk should light back up.',
+    body: 'The archives have hit an unexpected page. Your progress is safe on this device. Try again; the desk should light back up.',
     detailLabel: 'THE DETAILS',
     reload: 'RELIGHT THE CANDLE',
   },

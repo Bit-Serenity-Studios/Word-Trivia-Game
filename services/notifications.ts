@@ -56,7 +56,7 @@ const CHANNEL_ID = 'athenaeum-familiar';
 async function ensureChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-    name: 'The Athenaeum — Familiar',
+    name: 'The Athenaeum Familiar',
     importance: Notifications.AndroidImportance.DEFAULT,
     vibrationPattern: [0, 120, 80, 120],
     lightColor: '#C9A227',

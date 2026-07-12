@@ -24,7 +24,7 @@ export function dailyShareText(params: {
 }): string {
   const shield = params.hintsUsed === 0 ? 'unaided' : `${params.hintsUsed} hint${params.hintsUsed === 1 ? '' : 's'}`;
   return [
-    `The Athenaeum — Nightly Entry ${params.key}`,
+    `The Athenaeum, Nightly Entry ${params.key}`,
     `Category: ${params.category}`,
     `Result: catalogued (${shield})`,
     `Ink +${params.ink}  |  Streak ${params.streak}`,

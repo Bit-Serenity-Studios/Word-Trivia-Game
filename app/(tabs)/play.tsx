@@ -89,7 +89,7 @@ export default function PlayShelf() {
                 paddingHorizontal: 32,
               }}
             >
-              Next rank — {nextStep.next.title}:{' '}
+              Next rank, {nextStep.next.title}:{' '}
               {formatNextRequirement(facts, nextStep.next.require)}
             </Text>
           ) : (
@@ -134,6 +134,6 @@ function formatNextRequirement(
   if (facts.nightlyBest < need.nightlyBest) {
     parts.push(`a ${need.nightlyBest}-night streak`);
   }
-  if (parts.length === 0) return 'requirements met — solve one more entry to promote.';
+  if (parts.length === 0) return 'requirements met. Solve one more entry to promote.';
   return parts.join(', ') + '.';
 }

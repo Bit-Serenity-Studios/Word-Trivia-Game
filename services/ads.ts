@@ -25,7 +25,7 @@ export function placementCopy(placement: RewardedPlacement): { title: string; bo
     case 'failure-rescue':
       return {
         title: 'A letter, on loan?',
-        body: 'The archives will send a raven bearing one revealed letter — attend a broadcast in exchange.',
+        body: 'The archives will send a raven bearing one revealed letter, attend a broadcast in exchange.',
       };
     case 'archivist-gift':
       return {

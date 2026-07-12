@@ -69,7 +69,7 @@ export const economy = {
       priceLabel: '$4.99',
       title: 'Patron of the Athenaeum',
       flavor:
-        'One-time gift. Removes every advertisement — banners, broadcasts, and interstitials — and gifts a founding hoard of ink.',
+        'One-time gift. Removes every advertisement (banners, broadcasts, and interstitials) and gifts a founding hoard of ink.',
       ink: 250,
     } satisfies IapProductConfig & { ink: number },
     hintBundleSmall: {

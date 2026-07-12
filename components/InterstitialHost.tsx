@@ -53,7 +53,7 @@ export function InterstitialHost({ children }: { children: React.ReactNode }) {
   const [done, setDone] = useState(false);
   const pendingRef = useRef<Pending | null>(null);
   const patron = useEntitlements((s) => s.patron);
-  const cadence = useAdCadence();
+  const recordInterstitialShown = useAdCadence((s) => s.recordInterstitialShown);
 
   useEffect(() => {
     pendingRef.current = pending;
@@ -120,11 +120,11 @@ export function InterstitialHost({ children }: { children: React.ReactNode }) {
       }
       const result = await provider.showAd(placement);
       if (result.shown) {
-        cadence.recordInterstitialShown(Date.now());
+        recordInterstitialShown(Date.now());
       }
       return result;
     },
-    [patron, provider, cadence],
+    [patron, provider, recordInterstitialShown],
   );
 
   const value = useMemo<InterstitialContext>(() => ({ offer }), [offer]);

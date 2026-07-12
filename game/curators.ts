@@ -58,7 +58,7 @@ export const CURATORS: Readonly<Record<VolumeId, CuratorLetter>> = {
     signature: 'E. Fenwick',
     greeting: 'Reader,',
     paragraphs: [
-      'To draw a coastline is to lie a little. The line one records is only ever the seam of the day one walked it — the tide moves, the cliffs fall, the map is out of date the moment the ink is dry.',
+      'To draw a coastline is to lie a little. The line one records is only ever the seam of the day one walked it. The tide moves, the cliffs fall, the map is out of date the moment the ink is dry.',
       'Yet we draw them anyway, and here are the words we use.',
     ],
     farewell: 'Ashore, at last,',
